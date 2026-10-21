@@ -1,0 +1,12 @@
+{
+  "appName": "openIMIS Claims & Policies",
+  "defaultCurrency": "USD",
+  "supportedLanguages": ["en", "fr"],
+  "components": {
+    "standardSheetHeightFactor": 0.62,
+    "confirmationSheetHeightFactor": 0.50,
+    "cardRadius": 14.0,
+    "fieldRadius": 14.0,
+    "contentPadding": 16.0
+  }
+}
