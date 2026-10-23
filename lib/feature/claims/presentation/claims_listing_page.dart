@@ -1,9 +1,10 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/claim_wizard_page.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/data/app_providers/app_provider.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/claim_wizard_page.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
 enum ClaimStatusTab {
   entered('Entered / Pending', Colors.orange),
@@ -57,9 +58,8 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
   bool _isLoading = true;
   String _searchQuery = '';
 
-  // Demo claims dataset matching openIMIS claims_android_app_java SQLHandler records
-  final List<ClaimItemRecord> _allClaims = [
-    const ClaimItemRecord(
+  static const List<ClaimItemRecord> _demoClaims = [
+    ClaimItemRecord(
       claimCode: 'CLM-78401',
       insureeName: 'Amina Mwangi',
       insureeChfId: 'CHF-9823412',
@@ -71,7 +71,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
       services: ['General Consultation', 'Blood Analysis Routine'],
       medications: ['Amoxicillin 500mg (2x)', 'Oral Rehydration Salts (3x)'],
     ),
-    const ClaimItemRecord(
+    ClaimItemRecord(
       claimCode: 'CLM-78402',
       insureeName: 'Joseph Kiptoo',
       insureeChfId: 'CHF-7749102',
@@ -83,7 +83,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
       services: ['Emergency Care', 'Chest X-Ray Single View'],
       medications: ['Azithromycin 250mg', 'Paracetamol 500mg'],
     ),
-    const ClaimItemRecord(
+    ClaimItemRecord(
       claimCode: 'CLM-78390',
       insureeName: 'Fatuma Hassan',
       insureeChfId: 'CHF-6623091',
@@ -95,7 +95,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
       services: ['Malaria Rapid Test', 'Observation Care (12h)'],
       medications: ['Artemether-Lumefantrine 80/480mg', 'Paracetamol 500mg'],
     ),
-    const ClaimItemRecord(
+    ClaimItemRecord(
       claimCode: 'CLM-78385',
       insureeName: 'Samuel Odhiambo',
       insureeChfId: 'CHF-5519820',
@@ -111,7 +111,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
         'Tramadol 50mg',
       ],
     ),
-    const ClaimItemRecord(
+    ClaimItemRecord(
       claimCode: 'CLM-78350',
       insureeName: 'Grace Muthoni',
       insureeChfId: 'CHF-4401923',
@@ -125,7 +125,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
       services: ['Executive Health Screening'],
       medications: ['Multivitamin syrup'],
     ),
-    const ClaimItemRecord(
+    ClaimItemRecord(
       claimCode: 'CLM-78342',
       insureeName: 'David Njoroge',
       insureeChfId: 'CHF-3391824',
@@ -142,6 +142,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
       medications: ['Metformin 850mg (90 tabs)'],
     ),
   ];
+  late final List<ClaimItemRecord> _allClaims;
 
   MoneyFormatter get _money => ref.read(moneyFormatterProvider);
 
@@ -152,12 +153,13 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
       length: ClaimStatusTab.values.length,
       vsync: this,
     );
+    _allClaims = ref.read(appProvider).demoMode ? _demoClaims : const [];
     _loadData();
   }
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future<void>.delayed(Duration.zero);
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -242,7 +244,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
             child: AppTextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search by claim code, CHF ID, or patient name...',
+                hintText: 'Search by Claim Code, Insurance No, or Patient Name',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -549,10 +551,10 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
               child: ListView(
                 children: [
                   _detailRow('Insuree Name', claim.insureeName),
-                  _detailRow('CHF ID', claim.insureeChfId),
+                  _detailRow('Insurance No', claim.insureeChfId),
                   _detailRow('Health Facility', claim.healthFacility),
                   _detailRow('Date of Submission', claim.date),
-                  _detailRow('Primary Diagnosis', claim.primaryDiagnosis),
+                  _detailRow('Main Dg', claim.primaryDiagnosis),
                   _detailRow('Total Claimed', _money.format(claim.totalAmount)),
                   if (claim.rejectionReason != null)
                     _detailRow(
@@ -562,7 +564,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
                     ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Medical Services:',
+                    'Services:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),

@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
 
 /// Utility class to handle and transform API errors
 class ApiErrorHandler {
@@ -77,7 +77,8 @@ class ApiErrorHandler {
     // Try to extract error message from response
     String message = 'Request failed';
     if (responseData is Map) {
-      message = responseData['message'] as String? ??
+      message =
+          responseData['message'] as String? ??
           responseData['error'] as String? ??
           message;
     } else if (responseData is String) {

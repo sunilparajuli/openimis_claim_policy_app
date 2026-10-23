@@ -1,16 +1,16 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_service_item_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_submission_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/diagnosis_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/claim_repository.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/offline_claim_repository.dart';
-import 'package:flutter_riverpod_template/feature/insuree/models/insuree_model.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
-import 'package:flutter_riverpod_template/feature/shared/providers/user_session_provider.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/diagnosis_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/offline_claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/insuree/models/insuree_model.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
 
 class ClaimWizardPage extends ConsumerStatefulWidget {
   final Insuree? prefilledInsuree;
@@ -153,7 +153,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
             content: Text(message),
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
-              label: 'Save Offline',
+              label: 'Post Claim Offline',
               onPressed: _saveOfflineClaim,
             ),
           ),
@@ -207,7 +207,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         ),
         title: const Text('Claim Saved Offline (SQLite)'),
         content: Text(
-          'Claim ${submission.claimCode} has been stored in local openIMIS SQLite database:\n\n• tblClaimDetails\n• tblClaimItems\n• tblClaimServices\n• tblClaimUploadStatus (pending)\n\nYou can synchronize it anytime from the Home screen offline queue.',
+          'Claim ${submission.claimCode} has been stored in the local openIMIS database and is ready to upload.',
         ),
         actions: [
           AppButton(
@@ -297,7 +297,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                       onPressed: _isSubmitting ? null : _submitClaim,
                       isLoading: _isSubmitting,
                       icon: const Icon(Icons.cloud_upload_outlined),
-                      label: const Text('Submit FHIR Claim (Online)'),
+                      label: const Text('Post Claim'),
                       style: AppButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: CustomColors.BrandPurple,
@@ -317,7 +317,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                             color: CustomColors.BrandPurple,
                           ),
                           label: const Text(
-                            'Save Offline (SQLite)',
+                            'Post Claim Offline',
                             style: TextStyle(color: CustomColors.BrandPurple),
                           ),
                           style: AppButton.styleFrom(
@@ -375,27 +375,27 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         },
         steps: [
           Step(
-            title: const Text('Visit & Facility Details'),
+            title: const Text('Claim Details'),
             isActive: _currentStep >= 0,
             content: _buildStep1FacilityInfo(),
           ),
           Step(
-            title: const Text('Diagnoses (ICD-10)'),
+            title: const Text('Diagnosis'),
             isActive: _currentStep >= 1,
             content: _buildStep2Diagnoses(),
           ),
           Step(
-            title: Text('Medical Services (${_selectedServices.length})'),
+            title: Text('Services (${_selectedServices.length})'),
             isActive: _currentStep >= 2,
             content: _buildStep3Services(),
           ),
           Step(
-            title: Text('Medications & Items (${_selectedItems.length})'),
+            title: Text('Items (${_selectedItems.length})'),
             isActive: _currentStep >= 3,
             content: _buildStep4Items(),
           ),
           Step(
-            title: const Text('Review & Adjudication'),
+            title: const Text('Review'),
             isActive: _currentStep >= 4,
             content: _buildStep5Review(),
           ),
@@ -410,7 +410,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         AppTextField(
           controller: _chfIdController,
           decoration: const InputDecoration(
-            labelText: 'Insuree CHF ID',
+            labelText: 'Insurance No',
             prefixIcon: Icon(Icons.badge),
           ),
         ),
@@ -418,7 +418,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         AppTextField(
           controller: _claimCodeController,
           decoration: const InputDecoration(
-            labelText: 'Claim Code / Number',
+            labelText: 'Claim Code',
             prefixIcon: Icon(Icons.tag),
           ),
         ),
@@ -426,7 +426,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         AppTextField(
           controller: _healthFacilityController,
           decoration: const InputDecoration(
-            labelText: 'Health Facility',
+            labelText: 'Health Facility Code',
             prefixIcon: Icon(Icons.local_hospital),
           ),
         ),
@@ -434,7 +434,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         AppTextField(
           controller: _claimAdminController,
           decoration: const InputDecoration(
-            labelText: 'Claim Administrator / Doctor',
+            labelText: 'Claim Admin',
             prefixIcon: Icon(Icons.person),
           ),
         ),
@@ -456,7 +456,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         AppTextField(
           controller: _guaranteeNoController,
           decoration: const InputDecoration(
-            labelText: 'Guarantee Number (Optional)',
+            labelText: 'Guarantee No',
             prefixIcon: Icon(Icons.security),
           ),
         ),
@@ -471,16 +471,13 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Primary Diagnosis (Mandatory)',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        const Text('Diagnosis', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         AppAutocompleteField<Diagnosis>(
           key: ValueKey(_primaryDiagnosis?.code),
           options: allDiagnoses,
           initialValue: _primaryDiagnosis,
-          labelText: 'Primary ICD-10 Diagnosis',
+          labelText: 'Diagnosis',
           hintText: 'Type an ICD code or diagnosis name',
           prefixIcon: const Icon(Icons.search),
           displayStringForOption: (diagnosis) =>
@@ -497,7 +494,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         ),
         const SizedBox(height: 20),
         const Text(
-          'Secondary Diagnoses (Optional)',
+          'Additional Diagnoses',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
@@ -521,7 +518,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
           variant: AppButtonVariant.secondary,
           onPressed: () => _showAddDiagnosisDialog(allDiagnoses),
           icon: const Icon(Icons.add),
-          label: const Text('Add Secondary Diagnosis'),
+          label: const Text('Add Diagnosis'),
         ),
       ],
     );
@@ -532,7 +529,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppMoneySummaryRow(
-          label: 'Claimed Medical Services',
+          label: 'Services',
           value: 'Subtotal: ${_money.format(_servicesTotal)}',
           emphasized: true,
         ),
@@ -579,7 +576,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
           variant: AppButtonVariant.primary,
           onPressed: _showAddServiceDialog,
           icon: const Icon(Icons.add_circle_outline),
-          label: const Text('Add Medical Service'),
+          label: const Text('Add Services'),
         ),
       ],
     );
@@ -590,7 +587,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppMoneySummaryRow(
-          label: 'Medications & Consumables',
+          label: 'Items',
           value: 'Subtotal: ${_money.format(_itemsTotal)}',
           emphasized: true,
         ),
@@ -637,7 +634,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
           variant: AppButtonVariant.primary,
           onPressed: _showAddItemDialog,
           icon: const Icon(Icons.add_circle_outline),
-          label: const Text('Add Medication / Item'),
+          label: const Text('Add Items'),
         ),
       ],
     );
@@ -686,17 +683,17 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         const SizedBox(height: 12),
         ListTile(
           dense: true,
-          title: const Text('Insuree CHF ID'),
+          title: const Text('Insurance No'),
           subtitle: Text(_chfIdController.text),
         ),
         ListTile(
           dense: true,
-          title: const Text('Health Facility'),
+          title: const Text('Health Facility Code'),
           subtitle: Text(_healthFacilityController.text),
         ),
         ListTile(
           dense: true,
-          title: const Text('Primary Diagnosis'),
+          title: const Text('Diagnosis'),
           subtitle: Text(
             _primaryDiagnosis != null
                 ? '${_primaryDiagnosis!.code} - ${_primaryDiagnosis!.name}'
@@ -727,7 +724,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
               SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Offline Storage Ready: If network is unavailable, save locally to SQLite (tblClaimDetails) and sync later.',
+                  'Offline Mode: the claim can be stored locally and uploaded later.',
                   style: TextStyle(fontSize: 12),
                 ),
               ),
@@ -751,7 +748,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                 !pendingDiagnoses.any((item) => item.code == diagnosis.code),
           );
           return AppSheetContent(
-            title: const Text('Add Secondary Diagnoses'),
+            title: const Text('Add Diagnosis'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -763,7 +760,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                 AppAutocompleteField<Diagnosis>(
                   key: ValueKey(pendingDiagnoses.length),
                   options: availableDiagnoses,
-                  labelText: 'Secondary ICD-10 Diagnosis',
+                  labelText: 'Diagnosis',
                   hintText: 'Type an ICD code or diagnosis name',
                   prefixIcon: const Icon(Icons.search),
                   displayStringForOption: (diagnosis) =>

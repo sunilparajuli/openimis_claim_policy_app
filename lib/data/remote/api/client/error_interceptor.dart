@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error_handler.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error_handler.dart';
 
 /// Interceptor to handle API errors globally
 class ErrorInterceptor implements Interceptor {
@@ -48,7 +48,9 @@ class ErrorInterceptor implements Interceptor {
     switch (apiError.type) {
       case ApiErrorType.unauthorized:
         // TODO: Handle unauthorized - logout user or refresh token
-        debugPrint('⚠️ Unauthorized access - consider implementing token refresh');
+        debugPrint(
+          '⚠️ Unauthorized access - consider implementing token refresh',
+        );
         break;
       case ApiErrorType.network:
         // TODO: Could queue requests for retry when network is back

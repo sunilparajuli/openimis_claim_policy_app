@@ -1,308 +1,370 @@
 import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_submission_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart' as sqflite;
 
-/// Offline SQLite Database handler mirroring openIMIS tblClaimDetails schema
+/// SQLite storage compatible with the Java Claims app claim tables.
+/// [RawPayload] is an additive Flutter field used for reliable retries.
 class ClaimSqliteDatabase {
   ClaimSqliteDatabase._();
   static final ClaimSqliteDatabase instance = ClaimSqliteDatabase._();
 
-  static const String dbName = 'openimis_claims.db';
-  static const int dbVersion = 1;
+  static const dbName = 'openimis_claims.db';
+  static const dbVersion = 2;
+  static const tblClaimDetails = 'tblClaimDetails';
+  static const tblClaimItems = 'tblClaimItems';
+  static const tblClaimServices = 'tblClaimServices';
+  static const tblClaimUploadStatus = 'tblClaimUploadStatus';
 
-  // Table names matching openIMIS claims_android_app_java SQLHandler
-  static const String tblClaimDetails = 'tblClaimDetails';
-  static const String tblClaimItems = 'tblClaimItems';
-  static const String tblClaimServices = 'tblClaimServices';
-  static const String tblClaimUploadStatus = 'tblClaimUploadStatus';
+  static const statusAccepted = 'Accepted';
+  static const statusRejected = 'Rejected';
+  static const statusError = 'Error';
+  static const statusExported = 'Exported';
+  static const statusEntered = 'Entered';
+  static const statusArchived = 'Archived';
 
   sqflite.Database? _db;
+  Future<sqflite.Database?>? _opening;
   bool _useFallback = false;
   final Map<String, Map<String, dynamic>> _fallbackStore = {};
 
   Future<void> init() async {
     if (_db != null || _useFallback) return;
+    if (_opening != null) {
+      await _opening;
+      return;
+    }
+    _opening = _open();
+    await _opening;
+  }
 
+  Future<sqflite.Database?> _open() async {
     try {
-      final databasesPath = await sqflite.getDatabasesPath();
-      final path = p.join(databasesPath, dbName);
-
+      final path = p.join(await sqflite.getDatabasesPath(), dbName);
       _db = await sqflite.openDatabase(
         path,
         version: dbVersion,
         onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
       );
-      debugPrint(
-        '📦 [ClaimSqliteDatabase] Connected to SQLite database at $path',
-      );
-    } catch (e) {
-      debugPrint(
-        '⚠️ [ClaimSqliteDatabase] SQLite platform channel unavailable ($e). Utilizing structured resilient fallback store.',
-      );
+      debugPrint('[ClaimSqliteDatabase] Connected at $path');
+      return _db;
+    } catch (error) {
+      debugPrint('[ClaimSqliteDatabase] SQLite unavailable: $error');
       _useFallback = true;
+      return null;
+    } finally {
+      _opening = null;
     }
   }
 
   Future<void> _onCreate(sqflite.Database db, int version) async {
-    // 1. Claim Details table
+    await _createTables(db);
+    await _createIndexes(db);
+  }
+
+  Future<void> _onUpgrade(
+    sqflite.Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion >= 2) return;
+    await db.transaction((txn) async {
+      // v1 incorrectly allowed only one status. Java stores status history.
+      await txn.execute(
+        'ALTER TABLE $tblClaimUploadStatus RENAME TO _oldUploadStatus',
+      );
+      await txn.execute(_uploadStatusSql);
+      await txn.execute('''
+        INSERT INTO $tblClaimUploadStatus
+          (ClaimUUID, UploadDate, UploadStatus, UploadMessage)
+        SELECT ClaimUUID, UploadDate,
+          CASE lower(UploadStatus)
+            WHEN 'uploaded' THEN '$statusAccepted'
+            WHEN 'accepted' THEN '$statusAccepted'
+            WHEN 'rejected' THEN '$statusRejected'
+            WHEN 'error' THEN '$statusError'
+            ELSE '$statusError'
+          END,
+          UploadMessage
+        FROM _oldUploadStatus
+        WHERE lower(UploadStatus) != 'pending'
+      ''');
+      await txn.execute('DROP TABLE _oldUploadStatus');
+
+      final columns = await txn.rawQuery(
+        'PRAGMA table_info($tblClaimServices)',
+      );
+      final names = columns.map((row) => row['name']).toSet();
+      if (!names.contains('ServicePackageType')) {
+        await txn.execute(
+          'ALTER TABLE $tblClaimServices ADD COLUMN ServicePackageType TEXT',
+        );
+      }
+      if (!names.contains('SubServicesItems')) {
+        await txn.execute(
+          'ALTER TABLE $tblClaimServices ADD COLUMN SubServicesItems TEXT',
+        );
+      }
+      await _createIndexes(txn);
+    });
+  }
+
+  static const _uploadStatusSql =
+      '''
+    CREATE TABLE IF NOT EXISTS $tblClaimUploadStatus (
+      ClaimUUID TEXT, UploadDate TEXT, UploadStatus TEXT, UploadMessage TEXT
+    )
+  ''';
+
+  Future<void> _createTables(sqflite.DatabaseExecutor db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS $tblClaimDetails (
         ClaimUUID TEXT PRIMARY KEY,
-        ClaimDate TEXT,
-        HFCode TEXT,
-        ClaimAdmin TEXT,
-        ClaimCode TEXT,
-        GuaranteeNumber TEXT,
-        InsureeNumber TEXT,
-        StartDate TEXT,
-        EndDate TEXT,
-        ICDCode TEXT,
-        Comment TEXT,
-        Total REAL,
-        ICDCode1 TEXT,
-        ICDCode2 TEXT,
-        ICDCode3 TEXT,
-        ICDCode4 TEXT,
-        VisitType TEXT,
-        ReferalHF TEXT,
-        PatientCondition TEXT,
-        PreAuthorization INTEGER,
-        RawPayload TEXT
-      );
+        ClaimDate TEXT, HFCode TEXT, ClaimAdmin TEXT, ClaimCode TEXT,
+        GuaranteeNumber TEXT, InsureeNumber TEXT, StartDate TEXT, EndDate TEXT,
+        ICDCode TEXT, Comment TEXT, Total TEXT, ICDCode1 TEXT, ICDCode2 TEXT,
+        ICDCode3 TEXT, ICDCode4 TEXT, VisitType TEXT, ReferalHF TEXT,
+        PatientCondition TEXT, PreAuthorization INTEGER, RawPayload TEXT
+      )
     ''');
-
-    // 2. Claim Items table
     await db.execute('''
       CREATE TABLE IF NOT EXISTS $tblClaimItems (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ClaimUUID TEXT,
-        ItemCode TEXT,
-        ItemName TEXT,
-        ItemPrice REAL,
-        ItemQuantity INTEGER
-      );
+        ClaimUUID TEXT, ItemCode TEXT, ItemPrice TEXT, ItemQuantity TEXT
+      )
     ''');
-
-    // 3. Claim Services table
     await db.execute('''
       CREATE TABLE IF NOT EXISTS $tblClaimServices (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ClaimUUID TEXT,
-        ServiceCode TEXT,
-        ServiceName TEXT,
-        ServicePrice REAL,
-        ServiceQuantity INTEGER
-      );
+        ClaimUUID TEXT, ServiceCode TEXT, ServicePrice TEXT,
+        ServiceQuantity TEXT, ServicePackageType TEXT, SubServicesItems TEXT
+      )
     ''');
-
-    // 4. Claim Upload Status table
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS $tblClaimUploadStatus (
-        ClaimUUID TEXT PRIMARY KEY,
-        UploadDate TEXT,
-        UploadStatus TEXT,
-        UploadMessage TEXT
-      );
-    ''');
+    await db.execute(_uploadStatusSql);
   }
 
-  /// Inserts a newly recorded claim into offline SQLite tables
-  Future<void> saveClaimOffline(
-    ClaimSubmission submission, {
-    String status = 'pending',
-  }) async {
-    await init();
+  Future<void> _createIndexes(sqflite.DatabaseExecutor db) async {
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_claim_code ON $tblClaimDetails(ClaimCode)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_claim_items_uuid ON $tblClaimItems(ClaimUUID)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_claim_services_uuid ON $tblClaimServices(ClaimUUID)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_claim_status_uuid_date ON $tblClaimUploadStatus(ClaimUUID, UploadDate)',
+    );
+  }
 
-    final claimUuid = submission.claimCode;
-    final nowIso = DateTime.now().toIso8601String();
+  Future<void> saveClaimOffline(ClaimSubmission submission) async {
+    await init();
+    final claimUuid =
+        await _claimUuidForCode(submission.claimCode) ?? _newUuid();
+    final claimDate = submission.claimDate.toIso8601String();
 
     if (_useFallback || _db == null) {
       _fallbackStore[claimUuid] = {
         'submission': submission,
-        'status': status,
-        'date': nowIso,
-        'message': status == 'pending'
-            ? 'Saved offline pending sync'
-            : 'Synced',
+        'status': statusEntered,
+        'date': claimDate,
       };
       return;
     }
 
     await _db!.transaction((txn) async {
-      // Primary Diagnosis & Secondary Diagnoses
-      final primaryIcd = submission.primaryDiagnosis.code;
-      final sec1 = submission.secondaryDiagnoses.isNotEmpty
-          ? submission.secondaryDiagnoses[0].code
-          : null;
-      final sec2 = submission.secondaryDiagnoses.length > 1
-          ? submission.secondaryDiagnoses[1].code
-          : null;
-      final sec3 = submission.secondaryDiagnoses.length > 2
-          ? submission.secondaryDiagnoses[2].code
-          : null;
-      final sec4 = submission.secondaryDiagnoses.length > 3
-          ? submission.secondaryDiagnoses[3].code
-          : null;
-
-      // 1. Insert Claim Details
+      final secondary = submission.secondaryDiagnoses;
       await txn.insert(tblClaimDetails, {
         'ClaimUUID': claimUuid,
-        'ClaimDate': nowIso,
-        'HFCode': submission.healthFacilityName,
-        'ClaimAdmin': submission.claimAdministrator,
+        'ClaimDate': claimDate,
+        'HFCode': submission.healthFacility,
+        'ClaimAdmin': submission.claimAdmin,
         'ClaimCode': submission.claimCode,
         'GuaranteeNumber': submission.guaranteeNo ?? '',
         'InsureeNumber': submission.insureeChfId,
         'StartDate': submission.startDate.toIso8601String(),
         'EndDate': submission.endDate.toIso8601String(),
-        'ICDCode': primaryIcd,
+        'ICDCode': submission.primaryDiagnosis.code,
         'Comment': 'Mobile Claim Submission',
-        'Total': submission.totalAmount,
-        'ICDCode1': sec1,
-        'ICDCode2': sec2,
-        'ICDCode3': sec3,
-        'ICDCode4': sec4,
-        'VisitType': submission.visitType.name,
+        'Total': submission.totalAmount.toStringAsFixed(2),
+        'ICDCode1': secondary.isNotEmpty ? secondary[0].code : null,
+        'ICDCode2': secondary.length > 1 ? secondary[1].code : null,
+        'ICDCode3': secondary.length > 2 ? secondary[2].code : null,
+        'ICDCode4': secondary.length > 3 ? secondary[3].code : null,
+        'VisitType': submission.visitType.code,
         'ReferalHF': '',
         'PatientCondition': '',
         'PreAuthorization': 0,
         'RawPayload': jsonEncode(submission.toJson()),
       }, conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
-
-      // 2. Insert Services
-      for (final cs in submission.services) {
-        await txn.insert(tblClaimServices, {
+      await txn.delete(
+        tblClaimItems,
+        where: 'ClaimUUID = ?',
+        whereArgs: [claimUuid],
+      );
+      await txn.delete(
+        tblClaimServices,
+        where: 'ClaimUUID = ?',
+        whereArgs: [claimUuid],
+      );
+      final batch = txn.batch();
+      for (final item in submission.items) {
+        batch.insert(tblClaimItems, {
           'ClaimUUID': claimUuid,
-          'ServiceCode': cs.service.code,
-          'ServiceName': cs.service.name,
-          'ServicePrice': cs.price,
-          'ServiceQuantity': cs.quantity,
+          'ItemCode': item.item.code,
+          'ItemPrice': item.price.toString(),
+          'ItemQuantity': item.quantity.toString(),
         });
       }
-
-      // 3. Insert Items
-      for (final ci in submission.items) {
-        await txn.insert(tblClaimItems, {
+      for (final service in submission.services) {
+        batch.insert(tblClaimServices, {
           'ClaimUUID': claimUuid,
-          'ItemCode': ci.item.code,
-          'ItemName': ci.item.name,
-          'ItemPrice': ci.price,
-          'ItemQuantity': ci.quantity,
+          'ServiceCode': service.service.code,
+          'ServicePrice': service.price.toString(),
+          'ServiceQuantity': service.quantity.toString(),
+          'ServicePackageType': service.service.category ?? '',
+          'SubServicesItems': '[]',
         });
       }
-
-      // 4. Insert Upload Status
-      await txn.insert(tblClaimUploadStatus, {
-        'ClaimUUID': claimUuid,
-        'UploadDate': nowIso,
-        'UploadStatus': status,
-        'UploadMessage': status == 'pending'
-            ? 'Saved offline pending sync'
-            : 'Synced',
-      }, conflictAlgorithm: sqflite.ConflictAlgorithm.replace);
+      await batch.commit(noResult: true);
     });
   }
 
-  /// Retrieve all claims waiting to be uploaded
-  Future<List<OfflineClaimRecord>> getPendingClaims() async {
-    await init();
-
-    if (_useFallback || _db == null) {
-      return _fallbackStore.entries
-          .where((e) => e.value['status'] == 'pending')
-          .map(
-            (e) => OfflineClaimRecord(
-              claimUuid: e.key,
-              claimCode: (e.value['submission'] as ClaimSubmission).claimCode,
-              insureeChfId:
-                  (e.value['submission'] as ClaimSubmission).insureeChfId,
-              totalAmount:
-                  (e.value['submission'] as ClaimSubmission).totalAmount,
-              uploadStatus: 'pending',
-              date: e.value['date'] as String,
-              submission: e.value['submission'] as ClaimSubmission,
-            ),
-          )
-          .toList();
-    }
-
-    final results = await _db!.rawQuery('''
-      SELECT d.*, s.UploadStatus, s.UploadMessage, s.UploadDate
-      FROM $tblClaimDetails d
-      INNER JOIN $tblClaimUploadStatus s ON d.ClaimUUID = s.ClaimUUID
-      WHERE s.UploadStatus = 'pending'
-      ORDER BY d.ClaimDate DESC
-    ''');
-
-    return results.map((row) {
-      ClaimSubmission? submission;
-      try {
-        final raw = row['RawPayload'] as String?;
-        if (raw != null) {
-          submission = ClaimSubmission.fromJson(
-            jsonDecode(raw) as Map<String, dynamic>,
-          );
-        }
-      } catch (_) {}
-
-      return OfflineClaimRecord(
-        claimUuid: row['ClaimUUID'] as String,
-        claimCode: row['ClaimCode'] as String? ?? row['ClaimUUID'] as String,
-        insureeChfId: row['InsureeNumber'] as String? ?? '',
-        totalAmount: (row['Total'] as num?)?.toDouble() ?? 0.0,
-        uploadStatus: row['UploadStatus'] as String? ?? 'pending',
-        date: row['ClaimDate'] as String? ?? '',
-        submission: submission,
-      );
-    }).toList();
+  Future<String?> _claimUuidForCode(String claimCode) async {
+    if (_db == null) return null;
+    final rows = await _db!.query(
+      tblClaimDetails,
+      columns: const ['ClaimUUID'],
+      where: 'ClaimCode = ?',
+      whereArgs: [claimCode],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first['ClaimUUID'] as String?;
   }
 
-  /// Update upload status after syncing
-  Future<void> markClaimUploaded(
-    String claimUuid, {
-    String message = 'Synced successfully',
-  }) async {
+  Future<List<OfflineClaimRecord>> getPendingClaims() async {
     await init();
-
     if (_useFallback || _db == null) {
-      if (_fallbackStore.containsKey(claimUuid)) {
-        _fallbackStore[claimUuid]!['status'] = 'uploaded';
-        _fallbackStore[claimUuid]!['message'] = message;
-      }
-      return;
+      return _fallbackStore.entries
+          .where(
+            (entry) =>
+                entry.value['status'] == statusEntered ||
+                entry.value['status'] == statusError,
+          )
+          .map((entry) => _fallbackRecord(entry.key, entry.value))
+          .toList(growable: false);
     }
 
-    await _db!.update(
-      tblClaimUploadStatus,
-      {
-        'UploadStatus': 'uploaded',
-        'UploadMessage': message,
-        'UploadDate': DateTime.now().toIso8601String(),
-      },
-      where: 'ClaimUUID = ?',
-      whereArgs: [claimUuid],
+    // Same rule as Java SQLHandler.getAllPendingClaims: a claim remains
+    // pending while it has no status except Error.
+    final rows = await _db!.rawQuery('''
+      SELECT d.*,
+        COALESCE((SELECT s.UploadStatus FROM $tblClaimUploadStatus s
+          WHERE s.ClaimUUID = d.ClaimUUID ORDER BY s.UploadDate DESC LIMIT 1),
+          '$statusEntered') AS UploadStatus
+      FROM $tblClaimDetails d
+      WHERE NOT EXISTS (
+        SELECT 1 FROM $tblClaimUploadStatus s
+        WHERE s.ClaimUUID = d.ClaimUUID AND s.UploadStatus != '$statusError'
+      )
+      ORDER BY d.ClaimDate DESC
+    ''');
+    return rows.map(_recordFromRow).toList(growable: false);
+  }
+
+  OfflineClaimRecord _recordFromRow(Map<String, Object?> row) {
+    ClaimSubmission? submission;
+    try {
+      final raw = row['RawPayload'] as String?;
+      if (raw != null && raw.isNotEmpty) {
+        submission = ClaimSubmission.fromJson(
+          jsonDecode(raw) as Map<String, dynamic>,
+        );
+      }
+    } catch (error) {
+      debugPrint('[ClaimSqliteDatabase] Invalid retry payload: $error');
+    }
+    return OfflineClaimRecord(
+      claimUuid: row['ClaimUUID'] as String,
+      claimCode: row['ClaimCode'] as String? ?? row['ClaimUUID'] as String,
+      insureeChfId: row['InsureeNumber'] as String? ?? '',
+      totalAmount: double.tryParse(row['Total']?.toString() ?? '') ?? 0,
+      uploadStatus: row['UploadStatus'] as String? ?? statusEntered,
+      date: row['ClaimDate'] as String? ?? '',
+      submission: submission,
     );
   }
 
-  /// Get total count of pending offline claims
+  OfflineClaimRecord _fallbackRecord(String uuid, Map<String, dynamic> value) {
+    final submission = value['submission'] as ClaimSubmission;
+    return OfflineClaimRecord(
+      claimUuid: uuid,
+      claimCode: submission.claimCode,
+      insureeChfId: submission.insureeChfId,
+      totalAmount: submission.totalAmount,
+      uploadStatus: value['status'] as String,
+      date: value['date'] as String,
+      submission: submission,
+    );
+  }
+
+  Future<void> addUploadStatus(
+    String claimUuid,
+    String status, {
+    String? message,
+  }) async {
+    await init();
+    if (_useFallback || _db == null) {
+      final record = _fallbackStore[claimUuid];
+      if (record != null) record['status'] = status;
+      return;
+    }
+    await _db!.insert(tblClaimUploadStatus, {
+      'ClaimUUID': claimUuid,
+      'UploadDate': DateTime.now().toUtc().toIso8601String(),
+      'UploadStatus': status,
+      'UploadMessage': message,
+    });
+  }
+
+  Future<void> markClaimUploaded(
+    String claimUuid, {
+    String message = 'Synced successfully',
+  }) => addUploadStatus(claimUuid, statusAccepted, message: message);
+
+  Future<void> markClaimUploadFailed(String claimUuid, Object error) =>
+      addUploadStatus(claimUuid, statusError, message: error.toString());
+
   Future<int> countPendingClaims() async {
-    final pending = await getPendingClaims();
-    return pending.length;
+    await init();
+    if (_useFallback || _db == null) return (await getPendingClaims()).length;
+    final result = await _db!.rawQuery('''
+      SELECT COUNT(*) AS count FROM $tblClaimDetails d
+      WHERE NOT EXISTS (
+        SELECT 1 FROM $tblClaimUploadStatus s
+        WHERE s.ClaimUUID = d.ClaimUUID AND s.UploadStatus != '$statusError'
+      )
+    ''');
+    return sqflite.Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  static String _newUuid() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    String hex(int value) => value.toRadixString(16).padLeft(2, '0');
+    final value = bytes.map(hex).join();
+    return '${value.substring(0, 8)}-${value.substring(8, 12)}-'
+        '${value.substring(12, 16)}-${value.substring(16, 20)}-'
+        '${value.substring(20)}';
   }
 }
 
-/// Offline Claim summary model
 class OfflineClaimRecord {
-  final String claimUuid;
-  final String claimCode;
-  final String insureeChfId;
-  final double totalAmount;
-  final String uploadStatus;
-  final String date;
-  final ClaimSubmission? submission;
-
   const OfflineClaimRecord({
     required this.claimUuid,
     required this.claimCode,
@@ -312,4 +374,12 @@ class OfflineClaimRecord {
     required this.date,
     this.submission,
   });
+
+  final String claimUuid;
+  final String claimCode;
+  final String insureeChfId;
+  final double totalAmount;
+  final String uploadStatus;
+  final String date;
+  final ClaimSubmission? submission;
 }

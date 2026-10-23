@@ -1,16 +1,16 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/core/localization/app_localizations.dart';
-import 'package:flutter_riverpod_template/core/localization/language_selector_widget.dart';
-import 'package:flutter_riverpod_template/core/auth/biometric_auth_service.dart';
-import 'package:flutter_riverpod_template/feature/login/models/login_request_model.dart';
-import 'package:flutter_riverpod_template/feature/login/models/login_response_model.dart';
-import 'package:flutter_riverpod_template/feature/login/providers/login_notifier_provider.dart';
-import 'package:flutter_riverpod_template/feature/shared/navigation/app_router.gr.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/ui_utils.dart';
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
-import 'package:flutter_riverpod_template/feature/shared/providers/user_session_provider.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/localization/language_selector_widget.dart';
+import 'package:openimis_claim_policy_app/core/auth/biometric_auth_service.dart';
+import 'package:openimis_claim_policy_app/feature/login/models/login_request_model.dart';
+import 'package:openimis_claim_policy_app/feature/login/models/login_response_model.dart';
+import 'package:openimis_claim_policy_app/feature/login/providers/login_notifier_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/ui_utils.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
 
 @RoutePage()
 class LoginPage extends ConsumerStatefulWidget {

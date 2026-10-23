@@ -3,13 +3,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod_template/core/localization/app_localizations.dart';
-import 'package:flutter_riverpod_template/core/native/app_permissions.dart';
-import 'package:flutter_riverpod_template/feature/home/home_page.dart';
-import 'package:flutter_riverpod_template/feature/settings/views/settings_page.dart';
-import 'package:flutter_riverpod_template/feature/settings/views/permissions_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/indicators_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/reports_overview_page.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/native/app_permissions.dart';
+import 'package:openimis_claim_policy_app/feature/home/home_page.dart';
+import 'package:openimis_claim_policy_app/feature/settings/views/settings_page.dart';
+import 'package:openimis_claim_policy_app/feature/settings/views/permissions_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/indicators_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/reports_overview_page.dart';
 
 Widget localized(Widget child, {Locale locale = const Locale('fr')}) =>
     ProviderScope(

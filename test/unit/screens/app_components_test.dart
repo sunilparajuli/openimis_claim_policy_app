@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 
 void main() {
   Widget host(Widget child) => MaterialApp(home: Scaffold(body: child));

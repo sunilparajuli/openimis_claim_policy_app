@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/data/remote/api/providers/http_service_provider.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/http_service.dart';
-import 'package:flutter_riverpod_template/feature/login/models/login_request_model.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/providers/http_service_provider.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/http_service.dart';
+import 'package:openimis_claim_policy_app/feature/login/models/login_request_model.dart';
 
 final openImisAuthRepositoryProvider = Provider<OpenImisAuthRepository>(
   (ref) => OpenImisAuthRepository(ref.watch(httpServiceProvider)),

@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/claims_listing_page.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/service_item_catalog_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/family_enrolment_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/feedback_survey_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/indicators_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/reports_overview_page.dart';
-import 'package:flutter_riverpod_template/feature/shared/presentation/about_openimis_page.dart';
+import 'package:openimis_claim_policy_app/data/app_providers/app_provider.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/client/api_config.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/claims_listing_page.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/service_item_catalog_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/family_enrolment_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/feedback_survey_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/indicators_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/reports_overview_page.dart';
+import 'package:openimis_claim_policy_app/feature/shared/presentation/about_openimis_page.dart';
 
 void main() {
   group('openIMIS Screen Architecture Tests (Java Replication)', () {
-    testWidgets('Claims tabs fit phone widths and enlarged text', (tester) async {
+    testWidgets('Claims tabs fit phone widths and enlarged text', (
+      tester,
+    ) async {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.view.resetPhysicalSize);
@@ -20,11 +24,16 @@ void main() {
         tester.view.physicalSize = Size(width, 874);
         await tester.pumpWidget(
           ProviderScope(
+            overrides: [
+              appProvider.overrideWithValue(
+                ApiConfig('', apiKey: '', demoMode: true),
+              ),
+            ],
             child: MaterialApp(
               builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaler: TextScaler.linear(1.3),
-                ),
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(1.3)),
                 child: child!,
               ),
               home: const ClaimsListingPage(),
@@ -38,7 +47,8 @@ void main() {
         expect(tabs.labelColor, Colors.white);
         expect(tabs.unselectedLabelColor, Colors.white);
         final rejectedTab = find.descendant(
-          of: find.byType(TabBar), matching: find.text('REJECTED'),
+          of: find.byType(TabBar),
+          matching: find.text('REJECTED'),
         );
         await tester.ensureVisible(rejectedTab);
         await tester.pumpAndSettle();
@@ -53,7 +63,14 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: ClaimsListingPage())),
+        ProviderScope(
+          overrides: [
+            appProvider.overrideWithValue(
+              ApiConfig('', apiKey: '', demoMode: true),
+            ),
+          ],
+          child: const MaterialApp(home: ClaimsListingPage()),
+        ),
       );
 
       expect(find.text('Claims Listing'), findsOneWidget);
@@ -86,13 +103,13 @@ void main() {
       );
 
       expect(find.text('Facility Services & Items Mapping'), findsOneWidget);
-      expect(find.textContaining('Medical Services'), findsOneWidget);
-      expect(find.textContaining('Medications / Items'), findsOneWidget);
+      expect(find.text('Services (0)'), findsOneWidget);
+      expect(find.text('Items (0)'), findsOneWidget);
 
       // Switch to Items tab
-      await tester.tap(find.textContaining('Medications / Items'));
+      await tester.tap(find.text('Items (0)'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Amoxicillin 500mg'), findsOneWidget);
+      expect(find.text('Items (0)'), findsOneWidget);
     });
 
     testWidgets('FamilyEnrolmentPage renders household registration details', (
@@ -104,7 +121,7 @@ void main() {
 
       expect(find.text('Family & Insuree Enrolment'), findsOneWidget);
       expect(find.text('Enrol Family'), findsOneWidget);
-      expect(find.text('John Mwangi'), findsOneWidget);
+      expect(find.text('No enrolled families available'), findsOneWidget);
 
       // Tap to open household enrolment modal
       await tester.tap(find.text('Enrol Family'));
@@ -129,7 +146,7 @@ void main() {
         await tester.tap(find.text('Submitted Records'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Claim: CLM-78401'), findsOneWidget);
+        expect(find.text('No submitted feedback records'), findsOneWidget);
       },
     );
 

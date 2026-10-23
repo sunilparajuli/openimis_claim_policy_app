@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_master_data.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/claim_setup_sheet.dart';
-import 'package:flutter_riverpod_template/feature/shared/providers/user_session_provider.dart';
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_master_data.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/claim_setup_sheet.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 
 /// Ensures Claims-specific master data is configured without coupling it to
 /// the shared openIMIS login used by the Policies application.

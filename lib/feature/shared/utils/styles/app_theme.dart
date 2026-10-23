@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
 /// App theme mirroring openimis-profile-app styling
 class AppThemes {

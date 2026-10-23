@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_bottom_sheet.dart';
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_button.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_bottom_sheet.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_button.dart';
 
 enum AppStatusTone { neutral, info, success, warning, danger }
 

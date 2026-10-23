@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod_template/data/remote/api/api_result_state.dart';
-import 'package:flutter_riverpod_template/feature/login/models/login_response_model.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/api_result_state.dart';
+import 'package:openimis_claim_policy_app/feature/login/models/login_response_model.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'login_state_model.freezed.dart';

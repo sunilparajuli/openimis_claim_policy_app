@@ -1,9 +1,9 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/insuree/presentation/insuree_enquiry_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/policy_renewal_page.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/feature/insuree/presentation/insuree_enquiry_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/policy_renewal_page.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
 class FamilyMember {
   final String fullName;

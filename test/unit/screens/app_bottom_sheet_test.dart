@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_bottom_sheet.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_bottom_sheet.dart';
 
 void main() {
   testWidgets('Tablet sheets are wide and actions return their result', (

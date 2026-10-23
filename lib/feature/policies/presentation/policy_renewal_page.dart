@@ -1,9 +1,9 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/data/remote/graphql/graphql_service_provider.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/data/remote/graphql/graphql_service_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
 class PolicyRenewalPage extends ConsumerStatefulWidget {
   final String? initialChfId;

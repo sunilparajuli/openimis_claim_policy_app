@@ -1,10 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/shared/navigation/app_router.gr.dart';
-import 'package:flutter_riverpod_template/feature/shared/providers/user_session_provider.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
-import 'package:flutter_riverpod_template/core/auth/biometric_auth_service.dart';
+import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/core/auth/biometric_auth_service.dart';
 
 @RoutePage()
 class SplashPage extends ConsumerStatefulWidget {

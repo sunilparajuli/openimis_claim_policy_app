@@ -20,7 +20,9 @@ class AppLocaleNotifier extends _$AppLocaleNotifier {
 
   /// Toggles between English ('en') and French ('fr').
   void toggleLanguage() {
-    state = state.languageCode == 'en' ? const Locale('fr') : const Locale('en');
+    state = state.languageCode == 'en'
+        ? const Locale('fr')
+        : const Locale('en');
   }
 
   bool get isFrench => state.languageCode == 'fr';

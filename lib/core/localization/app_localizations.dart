@@ -44,9 +44,8 @@ class AppLocalizations {
       ? 'Vérification Assuré & Police'
       : 'Insuree Verification & Policy';
   String get searchInsureeTitle =>
-      isFrench ? 'Rechercher un assuré par N° CHF' : 'Search Insuree by CHF ID';
-  String get chfIdLabel =>
-      isFrench ? 'Identifiant CHF / N° Carte' : 'CHF ID / Card Number';
+      isFrench ? 'Rechercher un assuré par numéro' : 'Search Insurance No';
+  String get chfIdLabel => isFrench ? 'Numéro d’assurance' : 'Insurance No';
   String get simulateQrScan =>
       isFrench ? 'Scanner Code QR' : 'Simulate QR Scan';
   String get policyStatus => isFrench ? 'Statut de la Police' : 'Policy Status';
@@ -71,44 +70,34 @@ class AppLocalizations {
   String get newClaimFormTitle =>
       isFrench ? 'Formulaire de Réclamation (FHIR)' : 'New Claim Form';
   String get visitAndFacility =>
-      isFrench ? 'Établissement & Visite' : 'Visit & Facility Details';
+      isFrench ? 'Détails de la réclamation' : 'Claim Details';
   String get healthFacility =>
-      isFrench ? 'Formation Sanitaire' : 'Health Facility';
-  String get claimCode =>
-      isFrench ? 'Numéro de Réclamation' : 'Claim Code / Number';
+      isFrench ? 'Code de la formation sanitaire' : 'Health Facility Code';
+  String get claimCode => isFrench ? 'Code de la réclamation' : 'Claim Code';
   String get claimAdminDoctor =>
-      isFrench ? 'Agent / Médecin Traitant' : 'Claim Administrator / Doctor';
+      isFrench ? 'Administrateur de prestations' : 'Claim Admin';
   String get visitType => isFrench ? 'Type de Visite' : 'Visit Type';
   String get visitEmergency => isFrench ? 'Urgence' : 'Emergency';
   String get visitReferral => isFrench ? 'Référé' : 'Referral';
   String get visitOther => isFrench ? 'Autre' : 'Other';
-  String get guaranteeNumber => isFrench
-      ? 'Numéro de Prise en Charge (Optionnel)'
-      : 'Guarantee Number (Optional)';
-  String get diagnoses =>
-      isFrench ? 'Diagnostics (CIM-10)' : 'Diagnoses (ICD-10)';
-  String get primaryDiagnosis => isFrench
-      ? 'Diagnostic Principal (Obligatoire)'
-      : 'Primary Diagnosis (Mandatory)';
-  String get secondaryDiagnoses => isFrench
-      ? 'Diagnostics Secondaires (Optionnel)'
-      : 'Secondary Diagnoses (Optional)';
+  String get guaranteeNumber =>
+      isFrench ? 'Numéro de garantie' : 'Guarantee No';
+  String get diagnoses => isFrench ? 'Diagnostic' : 'Diagnosis';
+  String get primaryDiagnosis => isFrench ? 'Diagnostic' : 'Diagnosis';
+  String get secondaryDiagnoses =>
+      isFrench ? 'Diagnostics supplémentaires' : 'Additional Diagnoses';
   String get addSecondaryDiagnosis =>
-      isFrench ? 'Ajouter un Diagnostic Secondaire' : 'Add Secondary Diagnosis';
-  String get medicalServices =>
-      isFrench ? 'Prestations Médicales' : 'Medical Services';
+      isFrench ? 'Ajouter un diagnostic' : 'Add Diagnosis';
+  String get medicalServices => isFrench ? 'Prestations' : 'Services';
   String get addMedicalService =>
-      isFrench ? 'Ajouter une Prestation' : 'Add Medical Service';
-  String get medicationsAndItems =>
-      isFrench ? 'Médicaments & Consommables' : 'Medications & Items';
-  String get addMedication =>
-      isFrench ? 'Ajouter un Médicament / Article' : 'Add Medication / Item';
-  String get reviewAndAdjudication =>
-      isFrench ? 'Révision & Soumission' : 'Review & Adjudication';
+      isFrench ? 'Ajouter des prestations' : 'Add Services';
+  String get medicationsAndItems => isFrench ? 'Articles' : 'Items';
+  String get addMedication => isFrench ? 'Ajouter des articles' : 'Add Items';
+  String get reviewAndAdjudication => isFrench ? 'Révision' : 'Review';
   String get totalClaimAmount =>
       isFrench ? 'Montant Total Réclamé' : 'Total Claim Amount';
   String get submitFhirClaim =>
-      isFrench ? 'Soumettre la Réclamation (FHIR)' : 'Submit FHIR Claim';
+      isFrench ? 'Enregistrer la réclamation' : 'Post Claim';
 
   // Policy Renewal
   String get policyRenewalTitle =>

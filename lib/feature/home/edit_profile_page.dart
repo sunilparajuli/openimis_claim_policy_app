@@ -1,8 +1,8 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/ui_utils.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/ui_utils.dart';
 
 @RoutePage()
 class EditProfilePage extends ConsumerStatefulWidget {

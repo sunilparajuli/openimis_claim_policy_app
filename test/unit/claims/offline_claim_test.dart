@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_service_item_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_submission_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/diagnosis_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/claim_repository.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/offline_claim_repository.dart';
-import 'package:flutter_riverpod_template/feature/shared/widgets/shimmer_loading.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/diagnosis_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/offline_claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/shimmer_loading.dart';
 
 class MockRemoteClaimRepository implements ClaimRepository {
   bool submitSuccess = true;
@@ -47,13 +47,21 @@ void main() {
       primaryDiagnosis: const Diagnosis(code: 'A09', name: 'Gastroenteritis'),
       services: [
         ClaimedService(
-          service: const MedicalService(code: 'SRV001', name: 'General Consultation', price: 20.0),
+          service: const MedicalService(
+            code: 'SRV001',
+            name: 'General Consultation',
+            price: 20.0,
+          ),
           quantity: 1,
         ),
       ],
       items: [
         ClaimedItem(
-          item: const MedicationItem(code: 'MED001', name: 'Amoxicillin', price: 5.0),
+          item: const MedicationItem(
+            code: 'MED001',
+            name: 'Amoxicillin',
+            price: 5.0,
+          ),
           quantity: 2,
         ),
       ],
@@ -61,59 +69,76 @@ void main() {
   }
 
   group('OfflineClaimRepository & SQLite schema', () {
-    test('saveClaim saves offline claim and increments pending count', () async {
-      final repo = OfflineClaimRepository();
-      final initialCount = await repo.countPendingClaims();
+    test(
+      'saveClaim saves offline claim and increments pending count',
+      () async {
+        final repo = OfflineClaimRepository();
+        final initialCount = await repo.countPendingClaims();
 
-      final claim1 = createSampleSubmission('CLM-TEST-001');
-      await repo.saveClaim(claim1, isPending: true);
+        final claim1 = createSampleSubmission('CLM-TEST-001');
+        await repo.saveClaim(claim1, isPending: true);
 
-      final countAfter = await repo.countPendingClaims();
-      expect(countAfter, equals(initialCount + 1));
+        final countAfter = await repo.countPendingClaims();
+        expect(countAfter, equals(initialCount + 1));
 
-      final pending = await repo.getPendingClaims();
-      final savedRecord = pending.firstWhere((r) => r.claimCode == 'CLM-TEST-001');
-      expect(savedRecord.insureeChfId, equals('CHF-9823412'));
-      expect(savedRecord.totalAmount, equals(30.0)); // 20 + 2*5 = 30
-      expect(savedRecord.uploadStatus, equals('pending'));
-    });
+        final pending = await repo.getPendingClaims();
+        final savedRecord = pending.firstWhere(
+          (r) => r.claimCode == 'CLM-TEST-001',
+        );
+        expect(savedRecord.insureeChfId, equals('CHF-9823412'));
+        expect(savedRecord.totalAmount, equals(30.0)); // 20 + 2*5 = 30
+        expect(savedRecord.uploadStatus, equals('Entered'));
+      },
+    );
 
-    test('syncAllPendingClaims uploads pending claims and marks them uploaded', () async {
-      final repo = OfflineClaimRepository();
-      final mockRemote = MockRemoteClaimRepository();
+    test(
+      'syncAllPendingClaims uploads pending claims and marks them uploaded',
+      () async {
+        final repo = OfflineClaimRepository();
+        final mockRemote = MockRemoteClaimRepository();
 
-      final claim2 = createSampleSubmission('CLM-SYNC-002');
-      await repo.saveClaim(claim2, isPending: true);
+        final claim2 = createSampleSubmission('CLM-SYNC-002');
+        await repo.saveClaim(claim2, isPending: true);
 
-      final result = await repo.syncAllPendingClaims(mockRemote);
-      expect(result.syncedCount, greaterThanOrEqualTo(1));
-      expect(result.failedCount, equals(0));
+        final result = await repo.syncAllPendingClaims(mockRemote);
+        expect(result.syncedCount, greaterThanOrEqualTo(1));
+        expect(result.failedCount, equals(0));
 
-      final remaining = await repo.getPendingClaims();
-      final syncedRecord = remaining.where((r) => r.claimCode == 'CLM-SYNC-002');
-      expect(syncedRecord.isEmpty, isTrue);
-    });
+        final remaining = await repo.getPendingClaims();
+        final syncedRecord = remaining.where(
+          (r) => r.claimCode == 'CLM-SYNC-002',
+        );
+        expect(syncedRecord.isEmpty, isTrue);
+      },
+    );
 
-    test('PendingClaimsCountNotifier tracks and updates state via ProviderContainer', () async {
-      final container = ProviderContainer();
-      final claim = createSampleSubmission('CLM-NOTIF-003');
-      await container.read(pendingClaimsCountProvider.notifier).saveOffline(claim);
-      expect(container.read(pendingClaimsCountProvider), greaterThan(0));
+    test(
+      'PendingClaimsCountNotifier tracks and updates state via ProviderContainer',
+      () async {
+        final container = ProviderContainer();
+        final claim = createSampleSubmission('CLM-NOTIF-003');
+        await container
+            .read(pendingClaimsCountProvider.notifier)
+            .saveOffline(claim);
+        expect(container.read(pendingClaimsCountProvider), greaterThan(0));
 
-      final mockRemote = MockRemoteClaimRepository();
-      await container.read(pendingClaimsCountProvider.notifier).syncAll(mockRemote);
-      expect(container.read(pendingClaimsCountProvider), equals(0));
-    });
+        final mockRemote = MockRemoteClaimRepository();
+        await container
+            .read(pendingClaimsCountProvider.notifier)
+            .syncAll(mockRemote);
+        expect(container.read(pendingClaimsCountProvider), equals(0));
+      },
+    );
   });
 
   group('Shimmer Loading Widgets', () {
-    testWidgets('Shimmer and ShimmerBox render properly without error', (tester) async {
+    testWidgets('Shimmer and ShimmerBox render properly without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: Shimmer(
-              child: ShimmerBox(width: 100, height: 20),
-            ),
+            body: Shimmer(child: ShimmerBox(width: 100, height: 20)),
           ),
         ),
       );
@@ -122,13 +147,11 @@ void main() {
       expect(find.byType(ShimmerBox), findsOneWidget);
     });
 
-    testWidgets('InsureeVerificationShimmer renders skeleton structure', (tester) async {
+    testWidgets('InsureeVerificationShimmer renders skeleton structure', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: InsureeVerificationShimmer(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: InsureeVerificationShimmer())),
       );
 
       expect(find.byType(InsureeVerificationShimmer), findsOneWidget);
@@ -137,11 +160,7 @@ void main() {
 
     testWidgets('ClaimListShimmer renders list placeholders', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ClaimListShimmer(count: 3),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ClaimListShimmer(count: 3))),
       );
 
       expect(find.byType(ClaimListShimmer), findsOneWidget);

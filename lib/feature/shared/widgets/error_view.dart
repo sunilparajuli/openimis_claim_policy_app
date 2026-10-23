@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'app_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
 
 /// Widget to display error messages in a user-friendly way
 class ErrorView extends StatelessWidget {

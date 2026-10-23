@@ -37,18 +37,13 @@ void showSnackBar(
           Icon(icon, color: Colors.white),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(color: Colors.white),
-            ),
+            child: Text(message, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
       backgroundColor: backgroundColor,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       duration: duration,
       margin: const EdgeInsets.all(16),
     ),

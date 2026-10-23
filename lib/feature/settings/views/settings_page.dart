@@ -1,15 +1,15 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/my_app.dart' show themeModeProvider;
-import 'package:flutter_riverpod_template/feature/shared/navigation/app_router.gr.dart';
-import 'package:flutter_riverpod_template/feature/shared/providers/user_session_provider.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/ui_utils.dart';
+import 'package:openimis_claim_policy_app/my_app.dart' show themeModeProvider;
+import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/ui_utils.dart';
 import 'permissions_page.dart';
-import 'package:flutter_riverpod_template/core/config/currency_provider.dart';
-import 'package:flutter_riverpod_template/core/auth/biometric_auth_service.dart';
+import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/auth/biometric_auth_service.dart';
 
 @RoutePage()
 class SettingsPage extends ConsumerWidget {
@@ -483,7 +483,7 @@ class SettingsPage extends ConsumerWidget {
     // TODO: Clear local data and preferences
     // TODO: Logout user and navigate to login screen
 
-    // Clear demo user session
+    // Clear the current user session.
     ref.read(userSessionProvider.notifier).logout();
 
     showSnackBar(

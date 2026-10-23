@@ -9,7 +9,7 @@ import CoreLocation
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
-  private static let nativeConfigChannel = "com.example.app/native_config"
+  private static let nativeConfigChannel = "org.openimis/config"
   private static let permissions = AppPermissions()
 
   override func application(
@@ -154,4 +154,3 @@ private final class AppPermissions: NSObject, CLLocationManagerDelegate {
     result(status("location"))
   }
 }
-

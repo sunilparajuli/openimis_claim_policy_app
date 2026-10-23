@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/claims/data/offline/claim_sqlite_database.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_submission_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/claims/data/offline/claim_sqlite_database.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_repository.dart';
 
 class OfflineClaimRepository {
   final ClaimSqliteDatabase _db = ClaimSqliteDatabase.instance;
@@ -10,10 +10,7 @@ class OfflineClaimRepository {
     ClaimSubmission submission, {
     bool isPending = true,
   }) async {
-    await _db.saveClaimOffline(
-      submission,
-      status: isPending ? 'pending' : 'uploaded',
-    );
+    await _db.saveClaimOffline(submission);
   }
 
   Future<List<OfflineClaimRecord>> getPendingClaims() async {
@@ -42,12 +39,21 @@ class OfflineClaimRepository {
             await _db.markClaimUploaded(record.claimUuid);
             synced++;
           } else {
+            await _db.markClaimUploadFailed(
+              record.claimUuid,
+              'Server did not accept the claim',
+            );
             failed++;
           }
         } else {
+          await _db.markClaimUploadFailed(
+            record.claimUuid,
+            'Offline claim payload is unavailable',
+          );
           failed++;
         }
-      } catch (_) {
+      } catch (error) {
+        await _db.markClaimUploadFailed(record.claimUuid, error);
         failed++;
       }
     }

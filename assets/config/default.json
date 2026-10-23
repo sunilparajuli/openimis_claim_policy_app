@@ -1,6 +1,7 @@
 {
   "appName": "openIMIS Claims & Policies",
   "defaultCurrency": "USD",
+  "dataMode": "live",
   "supportedLanguages": ["en", "fr"],
   "components": {
     "standardSheetHeightFactor": 0.62,

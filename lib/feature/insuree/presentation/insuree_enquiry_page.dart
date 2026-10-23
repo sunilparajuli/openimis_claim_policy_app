@@ -1,11 +1,11 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/claim_wizard_page.dart';
-import 'package:flutter_riverpod_template/feature/insuree/models/insuree_model.dart';
-import 'package:flutter_riverpod_template/feature/insuree/repositories/insuree_repository.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/claim_wizard_page.dart';
+import 'package:openimis_claim_policy_app/feature/insuree/models/insuree_model.dart';
+import 'package:openimis_claim_policy_app/feature/insuree/repositories/insuree_repository.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
 class InsureeEnquiryPage extends ConsumerStatefulWidget {
   const InsureeEnquiryPage({super.key});

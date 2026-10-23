@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:flutter_riverpod_template/data/local/secure_storage_service.dart';
+import 'package:openimis_claim_policy_app/data/local/secure_storage_service.dart';
 
 part 'user_session_provider.g.dart';
 

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod_template/data/remote/api/client/retry_interceptor.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/dio_http_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/client/retry_interceptor.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/dio_http_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -128,11 +128,7 @@ void main() {
           onRequest: (options, handler) {
             if (options.path == '/items/1' && options.method == 'DELETE') {
               return handler.resolve(
-                Response(
-                  requestOptions: options,
-                  statusCode: 204,
-                  data: null,
-                ),
+                Response(requestOptions: options, statusCode: 204, data: null),
               );
             }
             handler.next(options);
@@ -191,33 +187,40 @@ void main() {
       expect(
         () => httpService.get('/slow'),
         throwsA(
-          isA<ApiError>()
-              .having((e) => e.type, 'type', ApiErrorType.timeout),
+          isA<ApiError>().having((e) => e.type, 'type', ApiErrorType.timeout),
         ),
       );
     });
   });
 
   group('RetryInterceptor Tests', () {
-    test('Retries failed request up to maxRetries on connection error', () async {
-      final dio = Dio();
+    test(
+      'Retries failed request up to maxRetries on connection error',
+      () async {
+        final dio = Dio();
 
-      dio.interceptors.add(
-        RetryInterceptor(
-          dio: dio,
-          maxRetries: 2,
-          retryDelays: const [Duration(milliseconds: 10), Duration(milliseconds: 20)],
-        ),
-      );
+        dio.interceptors.add(
+          RetryInterceptor(
+            dio: dio,
+            maxRetries: 2,
+            retryDelays: const [
+              Duration(milliseconds: 10),
+              Duration(milliseconds: 20),
+            ],
+          ),
+        );
 
-      final mockAdapter = _MockFailThenSucceedAdapter(failuresBeforeSuccess: 2);
-      dio.httpClientAdapter = mockAdapter;
+        final mockAdapter = _MockFailThenSucceedAdapter(
+          failuresBeforeSuccess: 2,
+        );
+        dio.httpClientAdapter = mockAdapter;
 
-      final response = await dio.get('/retry-test');
-      expect(response.statusCode, 200);
-      expect(response.data['recovered'], true);
-      expect(mockAdapter.attempts, 3); // initial + 2 retries
-    });
+        final response = await dio.get('/retry-test');
+        expect(response.statusCode, 200);
+        expect(response.data['recovered'], true);
+        expect(mockAdapter.attempts, 3); // initial + 2 retries
+      },
+    );
 
     test('Does not retry when no_retry extra option is set', () async {
       final dio = Dio();
@@ -234,10 +237,7 @@ void main() {
       dio.httpClientAdapter = mockAdapter;
 
       try {
-        await dio.get(
-          '/no-retry',
-          options: Options(extra: {'no_retry': true}),
-        );
+        await dio.get('/no-retry', options: Options(extra: {'no_retry': true}));
         fail('Should have thrown');
       } catch (e) {
         expect(e, isA<DioException>());
@@ -278,4 +278,3 @@ class _MockFailThenSucceedAdapter implements HttpClientAdapter {
   @override
   void close({bool force = false}) {}
 }
-

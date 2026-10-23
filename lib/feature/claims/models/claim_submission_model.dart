@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod_template/feature/claims/models/claim_service_item_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/diagnosis_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/diagnosis_model.dart';
 
 enum ClaimVisitType {
   emergency('E', 'Emergency'),

@@ -1,12 +1,12 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
 import '../repositories/report_repository.dart';
 import 'indicators_page.dart';
-import 'package:flutter_riverpod_template/core/config/currency_provider.dart';
-import 'package:flutter_riverpod_template/feature/shared/providers/user_session_provider.dart';
+import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
 
 class ReportsOverviewPage extends StatelessWidget {
   const ReportsOverviewPage({super.key});

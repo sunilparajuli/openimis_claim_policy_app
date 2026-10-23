@@ -1,7 +1,7 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/core/localization/app_localizations.dart';
-import 'package:flutter_riverpod_template/core/native/app_permissions.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/native/app_permissions.dart';
 
 class PermissionsPage extends StatefulWidget {
   const PermissionsPage({super.key});

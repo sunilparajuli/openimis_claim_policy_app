@@ -1,6 +1,6 @@
-name: flutter_riverpod_template
-description: "A new Flutter river pod project."
-publish_to: 'none' 
+name: openimis_claim_policy_app
+description: "openIMIS mobile application for claims and policy operations."
+publish_to: 'none'
 
 version: 1.0.0+1
 

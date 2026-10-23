@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/data/local/secure_storage_service.dart';
+import 'package:openimis_claim_policy_app/data/local/secure_storage_service.dart';
 import 'package:local_auth/local_auth.dart';
 
 class BiometricAuthService {

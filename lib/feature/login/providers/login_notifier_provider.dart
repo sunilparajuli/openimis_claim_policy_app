@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod_template/feature/login/models/login_request_model.dart';
-import 'package:flutter_riverpod_template/feature/login/models/login_response_model.dart';
-import 'package:flutter_riverpod_template/feature/login/repositories/openimis_auth_repository.dart';
-import 'package:flutter_riverpod_template/feature/shared/providers/user_session_provider.dart';
+import 'package:openimis_claim_policy_app/feature/login/models/login_request_model.dart';
+import 'package:openimis_claim_policy_app/feature/login/models/login_response_model.dart';
+import 'package:openimis_claim_policy_app/feature/login/repositories/openimis_auth_repository.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'login_notifier_provider.g.dart';
 
 /// Modern Riverpod 3.0 AsyncNotifier for login state management
-/// This demonstrates:
+/// Handles:
 /// - AsyncNotifier for async operations
 /// - Proper use of AsyncValue (loading/data/error states)
 /// - No need for custom APIResultState - AsyncValue handles it

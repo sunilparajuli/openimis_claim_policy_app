@@ -1,10 +1,10 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/shared/app_flavour/app_config.dart';
-import 'package:flutter_riverpod_template/feature/shared/navigation/app_router.gr.dart';
-import 'package:flutter_riverpod_template/feature/shared/providers/user_session_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/app_flavour/app_config.dart';
+import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -462,7 +462,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     // TODO: Clear local storage/preferences
     // TODO: Clear any cached data
 
-    // Clear demo user session
+    // Clear the current user session.
     ref.read(userSessionProvider.notifier).logout();
 
     // Navigate to login and clear all previous routes

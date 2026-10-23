@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/core/localization/app_localizations.dart';
-import 'package:flutter_riverpod_template/core/localization/locale_provider.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/localization/locale_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -15,8 +15,8 @@ void main() {
       expect(l10n.insureeVerificationTitle, 'Insuree Verification & Policy');
       expect(l10n.newClaimFormTitle, 'New Claim Form');
       expect(l10n.policyRenewalTitle, 'Policy Renewal Form');
-      expect(l10n.submitFhirClaim, 'Submit FHIR Claim');
-      expect(l10n.chfIdLabel, 'CHF ID / Card Number');
+      expect(l10n.submitFhirClaim, 'Post Claim');
+      expect(l10n.chfIdLabel, 'Insurance No');
     });
 
     test('French localized strings match expectations', () {
@@ -28,9 +28,9 @@ void main() {
       expect(l10n.insureeVerificationTitle, 'Vérification Assuré & Police');
       expect(l10n.newClaimFormTitle, 'Formulaire de Réclamation (FHIR)');
       expect(l10n.policyRenewalTitle, 'Renouvellement de Police');
-      expect(l10n.submitFhirClaim, 'Soumettre la Réclamation (FHIR)');
-      expect(l10n.chfIdLabel, 'Identifiant CHF / N° Carte');
-      expect(l10n.diagnoses, 'Diagnostics (CIM-10)');
+      expect(l10n.submitFhirClaim, 'Enregistrer la réclamation');
+      expect(l10n.chfIdLabel, 'Numéro d’assurance');
+      expect(l10n.diagnoses, 'Diagnostic');
     });
   });
 

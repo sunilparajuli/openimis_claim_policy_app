@@ -52,6 +52,7 @@ jobs:
               "API_BASE_URL=$api_url" \\
               'API_KEY=' \\
               "ENVIRONMENT=$flavor" \\
+              'DATA_MODE=live' \\
               "GOOGLE_MAPS_API_KEY=$maps_key" > ".env.$flavor"
           done
 

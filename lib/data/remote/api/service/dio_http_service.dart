@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error_handler.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/http_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error_handler.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/http_service.dart';
 
 /// Concrete implementation of [HttpService] powered by Dio.
 ///

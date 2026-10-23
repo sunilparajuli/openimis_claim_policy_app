@@ -1,24 +1,24 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/core/localization/app_localizations.dart';
-import 'package:flutter_riverpod_template/core/localization/language_selector_widget.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/claim_wizard_page.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/claim_setup_flow.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/claims_listing_page.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/offline_claims_sheet.dart';
-import 'package:flutter_riverpod_template/feature/claims/presentation/service_item_catalog_page.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/offline_claim_repository.dart';
-import 'package:flutter_riverpod_template/feature/insuree/presentation/insuree_enquiry_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/family_enrolment_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/feedback_survey_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/indicators_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/policy_renewal_page.dart';
-import 'package:flutter_riverpod_template/feature/policies/presentation/reports_overview_page.dart';
-import 'package:flutter_riverpod_template/feature/shared/navigation/app_router.gr.dart';
-import 'package:flutter_riverpod_template/feature/shared/presentation/about_openimis_page.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/localization/language_selector_widget.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/claim_wizard_page.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/claim_setup_flow.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/claims_listing_page.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/offline_claims_sheet.dart';
+import 'package:openimis_claim_policy_app/feature/claims/presentation/service_item_catalog_page.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/offline_claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/insuree/presentation/insuree_enquiry_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/family_enrolment_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/feedback_survey_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/indicators_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/policy_renewal_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/reports_overview_page.dart';
+import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
+import 'package:openimis_claim_policy_app/feature/shared/presentation/about_openimis_page.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
 @RoutePage()
 class HomePage extends ConsumerStatefulWidget {

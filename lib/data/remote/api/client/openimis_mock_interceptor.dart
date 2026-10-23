@@ -1,21 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-/// Interceptor that provides realistic openIMIS FHIR R4, GraphQL, and Policy API
-/// responses when the app is running against placeholder/demo environments (such as
-/// the default template base URL `api.github.com`).
-///
-/// Prevents 404 Not Found errors on GitHub endpoints and allows seamless offline
-/// synchronization, claim submission, indicators, and commission reporting.
+/// Local openIMIS responses used only when `DATA_MODE=demo`.
 class OpenImisMockInterceptor implements Interceptor {
+  const OpenImisMockInterceptor({this.forceDemo = false});
+
+  final bool forceDemo;
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     final path = options.path;
     final baseUrl = options.baseUrl;
     final isDemoEnvironment =
-        baseUrl.contains('github.com') ||
-        baseUrl.isEmpty ||
-        options.extra['mock_mode'] == true;
+        forceDemo || baseUrl.isEmpty || options.extra['mock_mode'] == true;
 
     // Only intercept openIMIS domain endpoints when not connected to a live openIMIS server
     if (!isDemoEnvironment) {

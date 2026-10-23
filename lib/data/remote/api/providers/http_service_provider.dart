@@ -1,6 +1,6 @@
-import 'package:flutter_riverpod_template/data/remote/api/providers/dio_provider.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/dio_http_service.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/http_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/providers/dio_provider.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/dio_http_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/http_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'http_service_provider.g.dart';

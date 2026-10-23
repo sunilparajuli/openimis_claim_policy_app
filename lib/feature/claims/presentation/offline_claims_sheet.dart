@@ -1,11 +1,11 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/claims/data/offline/claim_sqlite_database.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/claim_repository.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/offline_claim_repository.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/feature/claims/data/offline/claim_sqlite_database.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/offline_claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
 class OfflineClaimsSheet extends ConsumerStatefulWidget {
   const OfflineClaimsSheet({super.key});
@@ -90,14 +90,14 @@ class _OfflineClaimsSheetState extends ConsumerState<OfflineClaimsSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Offline SQLite Queue',
+                      'Pending Claims',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'openIMIS tblClaimDetails (${_records.length} pending)',
+                      '${_records.length} claim(s) ready to upload',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey.shade600,
                       ),
@@ -144,14 +144,14 @@ class _OfflineClaimsSheetState extends ConsumerState<OfflineClaimsSheet> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'All Claims Synchronized',
+                              'No claim found.',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'There are no pending offline claims waiting in SQLite tables.',
+                              'There are no pending claims to upload.',
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: Colors.grey.shade600,
@@ -200,7 +200,7 @@ class _OfflineClaimsSheetState extends ConsumerState<OfflineClaimsSheet> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      rec.uploadStatus.toUpperCase(),
+                                      rec.uploadStatus,
                                       style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
@@ -220,7 +220,7 @@ class _OfflineClaimsSheetState extends ConsumerState<OfflineClaimsSheet> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Insuree: ${rec.insureeChfId}',
+                                    'Insurance No: ${rec.insureeChfId}',
                                     style: const TextStyle(fontSize: 13),
                                   ),
                                   const Spacer(),
@@ -278,8 +278,8 @@ class _OfflineClaimsSheetState extends ConsumerState<OfflineClaimsSheet> {
                       icon: const Icon(Icons.sync),
                       label: Text(
                         _isSyncing
-                            ? 'Syncing with FHIR...'
-                            : 'Sync All (${_records.length})',
+                            ? 'Uploading…'
+                            : 'Upload Claims (${_records.length})',
                       ),
                       style: AppButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),

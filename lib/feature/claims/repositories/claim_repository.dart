@@ -1,10 +1,10 @@
-import 'package:flutter_riverpod_template/data/remote/api/providers/http_service_provider.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/http_service.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_service_item_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_submission_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_master_data.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/diagnosis_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/claim_setup_repository.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/providers/http_service_provider.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/http_service.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_master_data.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/diagnosis_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_setup_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:dio/dio.dart';
 

@@ -4,7 +4,7 @@ Use these components in application screens. They share the app theme and keep
 presentation separate from repositories, Riverpod state, navigation and validation.
 
 ```dart
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 ```
 
 ## Component index
@@ -226,8 +226,7 @@ Build new skeletons by composing `Shimmer(child: ...)`,
 - Deployment defaults live in `assets/config/default.json` and are exposed by
   `appComponentConfigProvider`. Keep widget behavior and type-safe APIs in Dart;
   JSON is for configurable values, not arbitrary widget trees.
-- Standardization covers application features under `lib/feature`. Educational
-  examples under `lib/samples` intentionally demonstrate raw Flutter APIs.
+- Standardization covers application features under `lib/feature`.
   Layout primitives (`Row`, `Card`, `ListTile`, `Switch`, etc.) and unique domain
   compositions are not wrapped just for renaming.
 

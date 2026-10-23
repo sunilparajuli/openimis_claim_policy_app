@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod_template/data/app_providers/app_provider.dart';
-import 'package:flutter_riverpod_template/data/local/secure_storage_service.dart';
-import 'package:flutter_riverpod_template/data/remote/api/client/auth_interceptor.dart';
-import 'package:flutter_riverpod_template/data/remote/api/client/custom_log_interceptor.dart';
-import 'package:flutter_riverpod_template/data/remote/api/client/error_interceptor.dart';
-import 'package:flutter_riverpod_template/data/remote/api/client/retry_interceptor.dart';
+import 'package:openimis_claim_policy_app/data/app_providers/app_provider.dart';
+import 'package:openimis_claim_policy_app/data/local/secure_storage_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/client/auth_interceptor.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/client/custom_log_interceptor.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/client/error_interceptor.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/client/openimis_mock_interceptor.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/client/retry_interceptor.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dio_provider.g.dart';
@@ -35,16 +36,13 @@ Dio dio(Ref ref) {
     ),
   );
 
-  // 1. Auth interceptor - attaches token & auto-refreshes on 401
+  if (appConfig.demoMode) {
+    dio.interceptors.add(OpenImisMockInterceptor(forceDemo: true));
+  }
+
   dio.interceptors.add(AuthInterceptor(storage: storage, dio: dio));
-
-  // 2. Retry interceptor - retries on transient connection issues and 5xx
   dio.interceptors.add(RetryInterceptor(dio: dio));
-
-  // 3. Error interceptor - handles and logs API errors
   dio.interceptors.add(ErrorInterceptor());
-
-  // 4. Logger interceptor - logs requests & responses
   dio.interceptors.add(CustomLoggerInterceptor());
 
   return dio;

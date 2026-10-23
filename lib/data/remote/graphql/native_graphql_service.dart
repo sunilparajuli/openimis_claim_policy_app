@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod_template/data/remote/api/error/api_error.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/http_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/http_service.dart';
 
 /// Lightweight native GraphQL client implementation built directly on top of [HttpService].
 ///
@@ -10,10 +10,8 @@ class NativeGraphQLService {
   final HttpService _httpService;
   final String _endpoint;
 
-  NativeGraphQLService(
-    this._httpService, {
-    String endpoint = 'api/graphql',
-  }) : _endpoint = endpoint;
+  NativeGraphQLService(this._httpService, {String endpoint = 'api/graphql'})
+    : _endpoint = endpoint;
 
   /// Executes a GraphQL query against the backend.
   Future<Map<String, dynamic>> query(

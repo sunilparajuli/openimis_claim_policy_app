@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/core/localization/app_localizations.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/claim_setup_repository.dart';
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_setup_repository.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 
 class ClaimSetupSheet extends ConsumerStatefulWidget {
   const ClaimSetupSheet({super.key});

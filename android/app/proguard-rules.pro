@@ -52,5 +52,5 @@
 }
 
 # Keep your data models
--keep class com.example.flutter_rivperpod_template.**.model.** { *; }
--keep class com.example.flutter_rivperpod_template.**.models.** { *; }
+-keep class org.openimis.claimpolicy.**.model.** { *; }
+-keep class org.openimis.claimpolicy.**.models.** { *; }

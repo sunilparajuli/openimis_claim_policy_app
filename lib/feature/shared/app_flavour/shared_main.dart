@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/core/native/native_bridge.dart';
-import 'package:flutter_riverpod_template/data/app_providers/app_provider.dart';
-import 'package:flutter_riverpod_template/data/remote/api/client/api_config.dart';
-import 'package:flutter_riverpod_template/feature/shared/app_flavour/app_config.dart';
+import 'package:openimis_claim_policy_app/core/native/native_bridge.dart';
+import 'package:openimis_claim_policy_app/data/app_providers/app_provider.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/client/api_config.dart';
+import 'package:openimis_claim_policy_app/feature/shared/app_flavour/app_config.dart';
 
-import 'package:flutter_riverpod_template/my_app.dart';
+import 'package:openimis_claim_policy_app/my_app.dart';
 
-void sharedMain(
-  AppConfig appConfig, {
-  List overrides = const [],
-}) async {
+void sharedMain(AppConfig appConfig, {List overrides = const []}) async {
   await init(appConfig);
 
   final allOverrides = [
     appProvider.overrideWithValue(
-      ApiConfig(appConfig.apiBaseUrl, apiKey: appConfig.appApiKey),
+      ApiConfig(
+        appConfig.apiBaseUrl,
+        apiKey: appConfig.appApiKey,
+        demoMode: appConfig.dataMode == AppDataMode.demo,
+      ),
     ),
     appConfigProvider.overrideWithValue(appConfig),
     ...overrides,
@@ -29,18 +30,7 @@ void sharedMain(
 }
 
 Future<void> init(AppConfig appConfig) async {
-  debugPrint('sharedMain launch title  ${appConfig.launchTitle}');
-  debugPrint('sharedMain environment  ${appConfig.environment}');
-  debugPrint('sharedMain base url ${appConfig.apiBaseUrl}');
-
-  // Securely pass Google Maps API Key to native layer (iOS)
   if (appConfig.googleMapsApiKey.isNotEmpty) {
     await NativeBridge.initializeGoogleMaps(appConfig.googleMapsApiKey);
   }
-
-  // TODO initialize others here
-  // eg. crashlitics
-  // orientation
-  // etc.
 }
-

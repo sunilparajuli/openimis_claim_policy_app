@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/dio_http_service.dart';
-import 'package:flutter_riverpod_template/data/remote/graphql/native_graphql_service.dart';
-import 'package:flutter_riverpod_template/feature/policies/repositories/report_repository.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/dio_http_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/graphql/native_graphql_service.dart';
+import 'package:openimis_claim_policy_app/feature/policies/repositories/report_repository.dart';
 
 void main() {
   late Dio dio;
@@ -57,8 +57,8 @@ void main() {
       dio.interceptors.add(
         InterceptorsWrapper(
           onRequest: (request, handler) {
-      expect(request.path, 'rest/api/policy/commissions');
-      expect(request.headers['api-version'], '3');
+            expect(request.path, 'rest/api/policy/commissions');
+            expect(request.headers['api-version'], '3');
             expect(request.data, {
               'enrolment_officer_code': 'OFF-1',
               'month': 3,

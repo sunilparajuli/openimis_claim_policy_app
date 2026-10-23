@@ -19,7 +19,8 @@ class Insuree {
 
   InsureePolicy? get activePolicy {
     for (final p in policies) {
-      if (p.status.toLowerCase() == 'active' || p.status.toLowerCase() == 'ready') {
+      if (p.status.toLowerCase() == 'active' ||
+          p.status.toLowerCase() == 'ready') {
         return p;
       }
     }
@@ -28,13 +29,18 @@ class Insuree {
 
   factory Insuree.fromJson(Map<String, dynamic> json) {
     return Insuree(
-      chfId: json['chfId']?.toString() ?? json['insureeCHFID']?.toString() ?? '',
-      fullName: json['fullName']?.toString() ?? json['name']?.toString() ?? 'Unknown Insuree',
+      chfId:
+          json['chfId']?.toString() ?? json['insureeCHFID']?.toString() ?? '',
+      fullName:
+          json['fullName']?.toString() ??
+          json['name']?.toString() ??
+          'Unknown Insuree',
       gender: json['gender']?.toString(),
       dob: json['dob']?.toString() ?? json['birthDate']?.toString(),
       photoUrl: json['photoUrl']?.toString() ?? json['photo']?.toString(),
       healthFacilityName: json['healthFacility']?['name']?.toString(),
-      policies: (json['policies'] as List<dynamic>?)
+      policies:
+          (json['policies'] as List<dynamic>?)
               ?.map((p) => InsureePolicy.fromJson(p as Map<String, dynamic>))
               .toList() ??
           [],
@@ -42,14 +48,14 @@ class Insuree {
   }
 
   Map<String, dynamic> toJson() => {
-        'chfId': chfId,
-        'fullName': fullName,
-        'gender': gender,
-        'dob': dob,
-        'photoUrl': photoUrl,
-        'healthFacilityName': healthFacilityName,
-        'policies': policies.map((p) => p.toJson()).toList(),
-      };
+    'chfId': chfId,
+    'fullName': fullName,
+    'gender': gender,
+    'dob': dob,
+    'photoUrl': photoUrl,
+    'healthFacilityName': healthFacilityName,
+    'policies': policies.map((p) => p.toJson()).toList(),
+  };
 }
 
 class InsureePolicy {
@@ -87,28 +93,30 @@ class InsureePolicy {
       code: json['code']?.toString() ?? '',
       name: json['name']?.toString() ?? 'Standard Health Policy',
       status: json['status']?.toString() ?? 'ACTIVE',
-      expiryDate: json['expiryDate']?.toString() ?? json['validityTo']?.toString(),
+      expiryDate:
+          json['expiryDate']?.toString() ?? json['validityTo']?.toString(),
       ceilingOp: (json['ceilingOp'] as num?)?.toDouble(),
       ceilingIp: (json['ceilingIp'] as num?)?.toDouble(),
       deductibleOp: (json['deductibleOp'] as num?)?.toDouble(),
       deductibleIp: (json['deductibleIp'] as num?)?.toDouble(),
       totalVisitsLeft: (json['totalVisitsLeft'] as num?)?.toInt(),
       totalConsultationsLeft: (json['totalConsultationsLeft'] as num?)?.toInt(),
-      consultationAmountLeft: (json['consultationAmountLeft'] as num?)?.toDouble(),
+      consultationAmountLeft: (json['consultationAmountLeft'] as num?)
+          ?.toDouble(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'code': code,
-        'name': name,
-        'status': status,
-        'expiryDate': expiryDate,
-        'ceilingOp': ceilingOp,
-        'ceilingIp': ceilingIp,
-        'deductibleOp': deductibleOp,
-        'deductibleIp': deductibleIp,
-        'totalVisitsLeft': totalVisitsLeft,
-        'totalConsultationsLeft': totalConsultationsLeft,
-        'consultationAmountLeft': consultationAmountLeft,
-      };
+    'code': code,
+    'name': name,
+    'status': status,
+    'expiryDate': expiryDate,
+    'ceilingOp': ceilingOp,
+    'ceilingIp': ceilingIp,
+    'deductibleOp': deductibleOp,
+    'deductibleIp': deductibleIp,
+    'totalVisitsLeft': totalVisitsLeft,
+    'totalConsultationsLeft': totalConsultationsLeft,
+    'consultationAmountLeft': consultationAmountLeft,
+  };
 }

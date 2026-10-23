@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_widgets.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
 class AboutOpenImisPage extends StatelessWidget {
   const AboutOpenImisPage({super.key});

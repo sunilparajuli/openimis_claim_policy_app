@@ -1,17 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod_template/data/local/secure_storage_service.dart';
+import 'package:openimis_claim_policy_app/data/local/secure_storage_service.dart';
 
 /// Interceptor to handle authentication and token refresh
 class AuthInterceptor implements Interceptor {
   final SecureStorageService _storage;
   final Dio _dio;
 
-  AuthInterceptor({
-    required SecureStorageService storage,
-    required Dio dio,
-  })  : _storage = storage,
-        _dio = dio;
+  AuthInterceptor({required SecureStorageService storage, required Dio dio})
+    : _storage = storage,
+      _dio = dio;
 
   @override
   Future<void> onRequest(
@@ -66,10 +64,7 @@ class AuthInterceptor implements Interceptor {
             try {
               final cloneReq = await _dio.request(
                 opts.path,
-                options: Options(
-                  method: opts.method,
-                  headers: opts.headers,
-                ),
+                options: Options(method: opts.method, headers: opts.headers),
                 data: opts.data,
                 queryParameters: opts.queryParameters,
               );

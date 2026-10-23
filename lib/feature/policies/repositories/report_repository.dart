@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/data/remote/api/providers/http_service_provider.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/http_service.dart';
-import 'package:flutter_riverpod_template/data/remote/graphql/graphql_service_provider.dart';
-import 'package:flutter_riverpod_template/data/remote/graphql/native_graphql_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/providers/http_service_provider.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/http_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/graphql/graphql_service_provider.dart';
+import 'package:openimis_claim_policy_app/data/remote/graphql/native_graphql_service.dart';
 
 final reportRepositoryProvider = Provider<ReportRepository>(
   (ref) => ReportRepository(

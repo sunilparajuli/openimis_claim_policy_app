@@ -68,6 +68,7 @@ class ApiError implements Exception {
   }
 
   @override
-  String toString() => 'ApiError(type: $type, message: $message, '
+  String toString() =>
+      'ApiError(type: $type, message: $message, '
       'statusCode: $statusCode)';
 }

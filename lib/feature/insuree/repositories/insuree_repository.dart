@@ -1,6 +1,6 @@
-import 'package:flutter_riverpod_template/data/remote/graphql/graphql_service_provider.dart';
-import 'package:flutter_riverpod_template/data/remote/graphql/native_graphql_service.dart';
-import 'package:flutter_riverpod_template/feature/insuree/models/insuree_model.dart';
+import 'package:openimis_claim_policy_app/data/remote/graphql/graphql_service_provider.dart';
+import 'package:openimis_claim_policy_app/data/remote/graphql/native_graphql_service.dart';
+import 'package:openimis_claim_policy_app/feature/insuree/models/insuree_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'insuree_repository.g.dart';

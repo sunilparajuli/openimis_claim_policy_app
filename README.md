@@ -1,181 +1,405 @@
-# Flutter Riverpod Template
+# openIMIS Claims & Policies Mobile App
 
-A production-ready Flutter template using Riverpod 3.0, Clean Architecture, and comprehensive testing.
+Flutter mobile client for openIMIS claim and policy operations. The application
+combines the operational scope of the openIMIS Java Claims and Policies Android
+applications with shared navigation, authentication, localization, offline claim
+storage, and reusable Material components.
 
-For reusable UI components and examples, see the [Shared UI usage guide](lib/feature/shared/widgets/README.md).
+## Supported workflows
 
-## Quick Start
+- openIMIS login and optional biometric sign-in
+- Claim Administrator setup and persisted facility context
+- insuree enquiry
+- claim entry with diagnoses, services, items, review, and submission
+- Java-compatible offline claim storage and later upload
+- family and dependent enrolment
+- policy renewal
+- feedback, indicators, reports, and officer commissions
+- language, currency, permissions, biometric, and Claim Admin settings
 
-### Prerequisites
-- Flutter SDK 3.44.1 or higher
-- iOS 12+ or Android API 21+
+The source of truth for server data is the configured openIMIS REST/FHIR and
+GraphQL endpoints. Demo data is available only when explicitly enabled.
 
-### Installation
+## Requirements
+
+- Flutter `3.47.2` or a compatible stable version
+- Dart version allowed by `pubspec.yaml`
+- Android Studio/Xcode for native builds
+- Java 17 for Android builds
+- an openIMIS server for live mode
+
+## First setup
 
 ```bash
-# Clone and run
-git clone <your-repo>
-cd flutter_riverpod_template
+git clone https://github.com/sunilparajuli/openimis_claim_policy_app.git
+cd openimis_claim_policy_app
 cp .env.example .env.dev
-flutter pub get && dart run build_runner build && flutter run -t lib/main/main_dev.dart
-
-# After changing .env files, run full clean:
-flutter clean && flutter pub get && dart run build_runner build
+cp .env.example .env.prod
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
 ```
 
-For detailed setup instructions, see [Environment Setup Guide](docs/technical/ENVIRONMENT_SETUP.md).
+Environment files and generated Dart files are intentionally ignored. Every new
+checkout must create the environment files and run code generation.
 
-## Features
+## Configuration
 
-- **State Management**: Riverpod 3.0 with code generation
-- **Architecture**: Clean Architecture, feature-based
-- **Security**: envied obfuscation, secure storage, token refresh
-- **UI**: Material3 with dark mode
-- **Testing**: Unit, widget, E2E (Maestro + Appium)
-- **Environment**: Obfuscated variables with envied
+Both `.env.dev` and `.env.prod` use the following keys:
 
-## Screenshots
+```dotenv
+API_BASE_URL=https://demo.openimis.org/
+API_KEY=
+ENVIRONMENT=dev
+DATA_MODE=live
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+```
 
-<p align="center">
-  <img src="docs/screenshots/10_samples.png" width="300" alt="Home - Explore Code Samples Button"/>
-  <img src="docs/screenshots/11_samples_list.png" width="300" alt="Samples List Page"/>
-</p>
+| Key | Purpose |
+| --- | --- |
+| `API_BASE_URL` | Base URL of the openIMIS deployment; keep the trailing slash |
+| `API_KEY` | Optional deployment-specific API key |
+| `ENVIRONMENT` | Build label, normally `dev` or `prod` |
+| `DATA_MODE` | `live` for network data or `demo` for local demonstration responses |
+| `GOOGLE_MAPS_API_KEY` | Native Maps key when map functionality is enabled |
 
-## Learning Resources & Training
+Do not commit `.env.dev`, `.env.prod`, tokens, passwords, or production keys.
+Envied obfuscation prevents casual string inspection but is not a secret vault;
+server-side authorization must still protect every API.
 
-This template includes comprehensive training materials for Flutter developers of all levels.
-
-**Training Sample Examples:** [lib/samples/](lib/samples/)
-- 15+ standalone, runnable examples covering beginner to advanced topics
-- Examples include lifecycle methods, state management, animations, isolates, memory leak prevention, and ANR handling
-- Each example is fully documented with console logging for learning
-- Can be copied to any Flutter project - no dependencies required
-
-**Technical Documentation:** [docs/technical/FAQ/](docs/technical/FAQ/)
-- Beginner topics: Widgets, layout, lifecycle, common mistakes
-- Intermediate topics: Animations, state management, Riverpod patterns, API integration
-- Advanced topics: Isolates, concurrency, platform channels, performance optimization
-- All docs cross-reference working code examples from the samples folder
-
-Access samples by tapping "Explore Code Samples" on the home screen.
-
-## Documentation
-
-See [docs/](docs/) for comprehensive guides on architecture, security, testing, and more.
-
-## Running Tests
+After changing an environment file, regenerate its Dart source:
 
 ```bash
-# Unit tests
-flutter test test/unit/
-
-# Widget tests
-flutter test test/widget/
-
-# All tests with coverage
-flutter test --coverage
-
-# E2E tests (Maestro)
-maestro test maestro/
-
-# E2E tests (Appium)
-cd appium && pytest tests/
+dart run build_runner build --delete-conflicting-outputs
 ```
 
-## Project Structure
+Use `flutter clean` only when native build output or generated environment values
+remain stale. It is not required for normal Dart changes.
 
+### Live data
+
+Set `DATA_MODE=live` and point `API_BASE_URL` to the required openIMIS instance.
+In live mode no demonstration interceptor is installed. Authentication, FHIR,
+GraphQL, claims, insurees, reports, and master data requests go to that server.
+
+```dotenv
+API_BASE_URL=https://openimis.example.org/
+API_KEY=
+ENVIRONMENT=prod
+DATA_MODE=live
+GOOGLE_MAPS_API_KEY=...
 ```
+
+The server must expose the endpoints used under `lib/data/remote` and permit the
+mobile client to authenticate. Endpoint details are listed in
+[`docs/api/API_LIST.md`](docs/api/API_LIST.md).
+
+### Demo data
+
+Set `DATA_MODE=demo` to use deterministic local responses implemented by
+`OpenImisMockInterceptor`. Demo mode is for UI demonstrations and automated tests;
+it must not be used to validate server integration or production behavior.
+
+```dotenv
+API_BASE_URL=https://demo.openimis.org/
+API_KEY=
+ENVIRONMENT=dev
+DATA_MODE=demo
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+```
+
+Demo mode is explicit. Changing the URL does not silently enable mock responses.
+When adding a demo response, keep its contract identical to the corresponding
+live endpoint and add a focused test.
+
+### Current data ownership
+
+| Area | Live mode | Demo mode |
+| --- | --- | --- |
+| Login | FHIR login endpoint | Local contract-compatible response |
+| Claim Admin/master data | FHIR Practitioner/diagnosis plus GraphQL price lists | Local responses |
+| Claim submission | FHIR Claim endpoint | Local accepted response |
+| Offline claims | Device SQLite, then live upload | Device SQLite, then demo upload |
+| Claims listing | No fabricated records; server listing adapter remains to be added | Demonstration records |
+| Insuree enquiry | GraphQL | Local response |
+| Indicators/commissions | GraphQL and commission REST API | Local responses |
+| Family enrolment/feedback forms | In-memory UI workflow until the deployment API is connected | In-memory UI workflow |
+
+This distinction is intentional: unfinished live integrations show an empty or
+error state and never fall back silently to patient or policy sample data.
+
+### JSON defaults
+
+`assets/config/default.json` contains non-secret deployment/UI defaults such as
+currency, supported languages, spacing, radii, and sheet height. It is loaded
+through `appComponentConfigProvider`.
+
+Use JSON for values that a deployment may configure. Do not define widget trees,
+validation rules, credentials, API responses, or business workflows in JSON.
+Those remain typed Dart code.
+
+## Running the application
+
+Development flavor:
+
+```bash
+flutter run --flavor dev -t lib/main/main_dev.dart
+```
+
+Production flavor:
+
+```bash
+flutter run --flavor prod -t lib/main/main_prod.dart
+```
+
+Android Studio run configuration:
+
+- Dart entry point: `lib/main/main_dev.dart`
+- Additional arguments: `--flavor dev`
+- Select an Android emulator or iOS Simulator before running
+
+The entry point must be selected from this project directory. Selecting a file
+from another checkout causes Android Studio's “entrypoint isn't within the
+project” error.
+
+## Architecture
+
+```text
 lib/
-├── core/          # Utilities, routing, theme
-├── data/          # API clients, storage, repositories
-├── feature/       # Feature modules (login, home, etc)
-├── samples/       # Interactive training examples (beginner/intermediate/advanced)
-└── main/          # App entry points (dev/prod)
-
-docs/
-├── technical/
-│   └── FAQ/       # Technical documentation and learning guides
-└── testing/       # Testing guides
-
-test/              # Unit and widget tests
-maestro/           # Maestro E2E tests
-appium/            # Appium E2E tests
+├── core/                 configuration, localization, native bridges, auth
+├── data/
+│   ├── local/            secure persistence
+│   └── remote/           Dio HTTP, GraphQL, interceptors, API contracts
+├── feature/
+│   ├── claims/           entry, listing, master data, offline queue
+│   ├── insuree/          insuree enquiry
+│   ├── policies/         enrolment, renewal, feedback, reports
+│   ├── login/            authentication
+│   ├── settings/         user-controlled configuration
+│   └── shared/           routing, theme, session, reusable widgets
+└── main/                 dev and prod entry points
 ```
 
-## Development Commands
+Dependency direction should remain:
+
+```text
+UI → provider/notifier → repository → HTTP/GraphQL/SQLite service
+```
+
+Widgets must not build URLs, execute SQL, read secure storage directly, or parse
+server responses. Repositories must not display sheets, snack bars, or navigate.
+
+## Riverpod conventions
+
+Riverpod owns application state and dependency injection. Use local widget state
+only for short-lived presentation details such as the active form step, focus,
+or a text controller.
+
+### Reading and watching
+
+- `ref.watch(provider)` rebuilds when state changes; use it in `build`.
+- `ref.read(provider)` performs an action or obtains a stable dependency.
+- `ref.listen(provider, ...)` handles one-time effects such as navigation or an
+  error message.
+- Never call network or database work directly during `build`.
+
+### Provider placement
+
+- Put feature providers beside their repository/model under that feature.
+- Put cross-feature session/config providers under `feature/shared` or `core`.
+- Providers should expose domain values, not prebuilt widgets.
+- Keep providers alive only when the state is expensive or must survive
+  navigation. Prefer automatic disposal for page-specific queries.
+
+Example repository provider:
+
+```dart
+final familyRepositoryProvider = Provider<FamilyRepository>((ref) {
+  return FamilyRepository(ref.watch(httpServiceProvider));
+});
+```
+
+Example asynchronous controller:
+
+```dart
+@riverpod
+class Families extends _$Families {
+  @override
+  Future<List<Family>> build() {
+    return ref.watch(familyRepositoryProvider).list();
+  }
+
+  Future<void> refresh() async {
+    ref.invalidateSelf();
+    await future;
+  }
+}
+```
+
+Code annotated with `@riverpod`, `@freezed`, Retrofit, Envied, or AutoRoute
+requires generated companion files. Never edit `*.g.dart`, `*.freezed.dart`, or
+`*.gr.dart` manually. Regenerate them with:
 
 ```bash
-# Generate code
-dart run build_runner build
+dart run build_runner build --delete-conflicting-outputs
+```
 
-# Watch for changes
-dart run build_runner watch
+## Reusable UI components
 
-# Analyze code
-flutter analyze
+Import the shared barrel rather than individual implementation files:
 
-# Format code
-dart format .
+```dart
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
+```
 
-# Run dev
-flutter run -t lib/main/main_dev.dart
+Use these components for new application screens:
 
-# Run prod
-flutter run -t lib/main/main_prod.dart
+| Need | Component |
+| --- | --- |
+| Text/password/number input | `AppTextField` |
+| Small typed selection | `AppDropdownField<T>` |
+| Searchable diagnosis/service/item selection | `AppAutocompleteField<T>` |
+| Date input | `AppDateField` |
+| Primary, secondary, text, or loading action | `AppButton` |
+| Page title and actions | `AppAppBar` |
+| Responsive popup | `showAppBottomSheet<T>` with `AppSheetContent` |
+| Confirmation/security prompt | `showAppConfirmationSheet` |
+| Grouped fields | `AppFormCard` |
+| Section title | `AppSectionHeader` |
+| Status | `AppStatusBadge` |
+| Currency/subtotal line | `AppMoneySummaryRow` |
+| Empty/loading/error feedback | `AppEmptyState`, `AppLoadingIndicator`, `AppErrorMessage` |
 
-# Build dev APK
-flutter build apk --release --flavor dev -t lib/main/main_dev.dart
+Example form:
 
-# Build prod APK
+```dart
+AppFormCard(
+  title: context.tr('Claim Details'),
+  child: Column(
+    children: [
+      AppTextField(
+        controller: claimCodeController,
+        labelText: context.tr('Claim Code'),
+        validator: requiredValue,
+      ),
+      const SizedBox(height: 12),
+      AppAutocompleteField<Diagnosis>(
+        options: diagnoses,
+        labelText: context.tr('Diagnosis'),
+        displayStringForOption: (value) => '${value.code} — ${value.name}',
+        searchStringForOption: (value) => '${value.code} ${value.name}',
+        onSelected: selectDiagnosis,
+      ),
+    ],
+  ),
+)
+```
+
+Example confirmation:
+
+```dart
+final confirmed = await showAppConfirmationSheet(
+  context: context,
+  title: context.tr('Clear Claim Administrator?'),
+  message: context.tr('The saved Claim Administrator code will be removed.'),
+  confirmLabel: context.tr('Clear'),
+  destructive: true,
+);
+if (confirmed == true) await clearClaimAdministrator();
+```
+
+Rules for reusable components:
+
+- Add generic behavior to `feature/shared/widgets`, not a domain-specific widget.
+- Keep labels supplied by the caller and localized with `context.tr(...)`.
+- Use the theme and `MoneyFormatter`; do not hard-code fonts or currency symbols.
+- Components own layout and interaction presentation, not API or database work.
+- Add widget tests for validation, overflow, loading, keyboard, and returned values.
+- Use a normal domain widget when a composition is unique to one workflow.
+
+The complete component API and more examples are in
+[`lib/feature/shared/widgets/README.md`](lib/feature/shared/widgets/README.md).
+
+## Offline claims
+
+`ClaimSqliteDatabase` mirrors the Java Claims app tables:
+
+- `tblClaimDetails`
+- `tblClaimItems`
+- `tblClaimServices`
+- `tblClaimUploadStatus`
+
+Upload status is append-only history using Java status names such as `Accepted`,
+`Rejected`, and `Error`. A claim with no non-error status remains pending. SQLite
+indexes support claim-code lookup, child records, status history, and fast pending
+counts. Schema upgrades must increment `dbVersion` and preserve existing claims.
+
+Do not place access tokens or passwords in SQLite. Authentication material belongs
+in `flutter_secure_storage`.
+
+## Localization and naming
+
+The English claim labels follow the Java Claims application, including
+`Insurance No`, `Health Facility Code`, `Claim Admin`, `Diagnosis`, `Services`,
+`Items`, `Post Claim`, and `Upload Claims`.
+
+When adding a label:
+
+1. Add the English/French mapping in `core/localization`.
+2. Render it through `context.tr(...)` or `AppLocalizations`.
+3. Update localization tests.
+4. Do not introduce a second name for an existing Java/OpenIMIS concept.
+
+## Adding a feature
+
+1. Create a folder under `lib/feature/<feature>`.
+2. Define typed domain models.
+3. Add a repository that depends on the shared HTTP, GraphQL, or local service.
+4. Expose repository/state through Riverpod.
+5. Build screens from shared components.
+6. Add localization keys and tests.
+7. Run generation, formatting, analysis, and tests.
+
+## Testing and quality checks
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+dart format lib test
+flutter analyze --no-pub
+flutter test --no-pub
+```
+
+Focused component tests:
+
+```bash
+flutter test --no-pub test/unit/screens/app_components_test.dart
+flutter test --no-pub test/unit/screens/app_bottom_sheet_test.dart
+```
+
+## Building and releases
+
+```bash
 flutter build apk --release --flavor prod -t lib/main/main_prod.dart
 ```
 
-## Environment Configuration
+`.github/workflows/ci.yml` runs generation, analysis, tests, and the production APK
+build on pushes and pull requests. A tag such as `v1.0.0` publishes the APK to a
+GitHub Release.
 
-Uses **envied** with separate files for each environment.
+The current Android release build uses debug signing for installable test APKs.
+Configure a protected upload keystore and GitHub secrets before Play Store use.
 
-**Development:**
-```bash
-cp .env.example .env.dev
-# Edit .env.dev with dev API keys
-flutter clean && flutter pub get && dart run build_runner build
-```
+## Security checklist
 
-**Production:**
-```bash
-cp .env.example .env.prod
-# Edit .env.prod with prod API keys
-flutter clean && flutter pub get && dart run build_runner build
-```
+- Never commit environment files, credentials, tokens, or keystores.
+- Keep production in `DATA_MODE=live`.
+- Do not log credentials, bearer tokens, biometric results, or patient data.
+- Store session and Claim Admin secrets through `SecureStorageService`.
+- Validate authorization on the server; hiding a screen is not authorization.
+- Review Android/iOS permissions whenever camera, photo, location, or biometric
+  behavior changes.
 
-**Note:** After editing any .env file, always run:
-```bash
-flutter clean && flutter pub get && dart run build_runner build
-```
+## Related projects
 
-## Contributing
-
-See documentation for:
-- [Architecture Best Practices](docs/technical/ARCHITECTURE.md)
-- [Testing Guidelines](docs/testing/UNIT_TESTING_GUIDE.md)
-- [Code Style Guide](docs/technical/CODE_STYLE.md)
-
-## Tech Stack
-
-- **Framework**: Flutter 3.44.1
-- **State Management**: Riverpod 3.0+ with code generation
-- **Architecture**: Clean Architecture, feature-based
-- **API Client**: Dio + Retrofit
-- **Navigation**: AutoRoute
-- **Storage**: flutter_secure_storage
-- **Testing**: flutter_test, Maestro, Appium
-
-## License
-
-MIT License - see LICENSE file
-
-## Support
-
-- Documentation: [docs/README.md](docs/README.md)
-- Issues: GitHub Issues
-- Questions: GitHub Discussions
+- [openIMIS Claims Android app](https://github.com/openimis/claims_android_app_java)
+- [openIMIS Policies Android app](https://github.com/openimis/policies_android_app_java)
+- [openIMIS](https://www.openimis.org/)

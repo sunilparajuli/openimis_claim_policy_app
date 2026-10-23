@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum AppEnvironment {
-  dev,
-  prod,
-}
+enum AppEnvironment { dev, prod }
+
+enum AppDataMode { live, demo }
 
 class AppConfig {
   AppConfig({
@@ -11,6 +10,7 @@ class AppConfig {
     required this.environment,
     required this.apiBaseUrl,
     required this.appApiKey,
+    this.dataMode = AppDataMode.live,
     this.googleMapsApiKey = '',
     this.initializeCrashlytics = true,
   });
@@ -19,6 +19,7 @@ class AppConfig {
   final AppEnvironment environment;
   final String apiBaseUrl;
   final String appApiKey;
+  final AppDataMode dataMode;
   final String googleMapsApiKey;
   final bool initializeCrashlytics;
 }

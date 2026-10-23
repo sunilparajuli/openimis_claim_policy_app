@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod_template/core/utils/validators.dart';
+import 'package:openimis_claim_policy_app/core/utils/validators.dart';
 
 void main() {
   group('Validators Tests', () {
@@ -23,10 +23,7 @@ void main() {
       });
 
       test('should return error for username more than 30 characters', () {
-        expect(
-          Validators.validateUsername('a' * 31),
-          isNotNull,
-        );
+        expect(Validators.validateUsername('a' * 31), isNotNull);
       });
 
       test('should return error for username with invalid characters', () {
@@ -201,20 +198,17 @@ void main() {
           isNotNull,
         );
         expect(
-          Validators.validateConfirmation('test@email.com', 'different@email.com'),
+          Validators.validateConfirmation(
+            'test@email.com',
+            'different@email.com',
+          ),
           isNotNull,
         );
       });
 
       test('should return error for empty confirmation', () {
-        expect(
-          Validators.validateConfirmation('', 'password123'),
-          isNotNull,
-        );
-        expect(
-          Validators.validateConfirmation(null, 'password123'),
-          isNotNull,
-        );
+        expect(Validators.validateConfirmation('', 'password123'), isNotNull);
+        expect(Validators.validateConfirmation(null, 'password123'), isNotNull);
       });
 
       test('should use custom field name in error message', () {

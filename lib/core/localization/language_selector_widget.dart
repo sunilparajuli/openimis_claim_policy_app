@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/core/localization/locale_provider.dart';
+import 'package:openimis_claim_policy_app/core/localization/locale_provider.dart';
 
 /// An interactive language toggle button supporting English and French.
 class LanguageSelectorButton extends ConsumerWidget {

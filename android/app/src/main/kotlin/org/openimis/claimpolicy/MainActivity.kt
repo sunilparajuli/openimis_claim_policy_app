@@ -1,4 +1,4 @@
-package com.example.flutter_rivperpod_template
+package org.openimis.claimpolicy
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine

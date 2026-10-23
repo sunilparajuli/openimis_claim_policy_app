@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_riverpod_template/core/localization/app_localizations.dart';
-import 'package:flutter_riverpod_template/core/localization/locale_provider.dart';
-import 'package:flutter_riverpod_template/feature/shared/navigation/app_router.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_theme.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/localization/locale_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_theme.dart';
 
 part 'my_app.g.dart';
 
@@ -27,10 +27,7 @@ class ThemeModeNotifier extends _$ThemeModeNotifier {
 }
 
 class MyApp extends ConsumerStatefulWidget {
-  const MyApp({
-    required this.launchTitle,
-    super.key,
-  });
+  const MyApp({required this.launchTitle, super.key});
   final String launchTitle;
 
   @override
@@ -46,8 +43,8 @@ class _MyAppState extends ConsumerState<MyApp> {
     final brightness = themeMode == ThemeMode.light
         ? Brightness.light
         : (themeMode == ThemeMode.dark
-            ? Brightness.dark
-            : MediaQuery.platformBrightnessOf(context));
+              ? Brightness.dark
+              : MediaQuery.platformBrightnessOf(context));
 
     // Set system UI overlay style globally
     SystemChrome.setSystemUIOverlayStyle(
@@ -58,8 +55,9 @@ class _MyAppState extends ConsumerState<MyApp> {
         systemNavigationBarColor: brightness == Brightness.light
             ? Colors.white
             : const Color(0xFF151515),
-        systemNavigationBarIconBrightness:
-            brightness == Brightness.light ? Brightness.dark : Brightness.light,
+        systemNavigationBarIconBrightness: brightness == Brightness.light
+            ? Brightness.dark
+            : Brightness.light,
       ),
     );
 
@@ -69,10 +67,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       title: widget.launchTitle,
       debugShowCheckedModeBanner: false, // Remove debug banner
       locale: currentLocale,
-      supportedLocales: const [
-        Locale('en', ''),
-        Locale('fr', ''),
-      ],
+      supportedLocales: const [Locale('en', ''), Locale('fr', '')],
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

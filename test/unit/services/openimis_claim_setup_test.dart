@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod_template/data/remote/api/client/openimis_mock_interceptor.dart';
-import 'package:flutter_riverpod_template/data/remote/api/service/dio_http_service.dart';
-import 'package:flutter_riverpod_template/data/remote/graphql/native_graphql_service.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_master_data.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/claim_setup_repository.dart';
-import 'package:flutter_riverpod_template/feature/login/models/login_request_model.dart';
-import 'package:flutter_riverpod_template/feature/login/repositories/openimis_auth_repository.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/client/openimis_mock_interceptor.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/service/dio_http_service.dart';
+import 'package:openimis_claim_policy_app/data/remote/graphql/native_graphql_service.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_master_data.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_setup_repository.dart';
+import 'package:openimis_claim_policy_app/feature/login/models/login_request_model.dart';
+import 'package:openimis_claim_policy_app/feature/login/repositories/openimis_auth_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -13,7 +13,7 @@ void main() {
 
   setUp(() {
     final dio = Dio(BaseOptions(baseUrl: 'https://api.github.com/'));
-    dio.interceptors.add(OpenImisMockInterceptor());
+    dio.interceptors.add(OpenImisMockInterceptor(forceDemo: true));
     http = DioHttpService(dio);
   });
 

@@ -1,10 +1,10 @@
-import 'package:flutter_riverpod_template/feature/shared/widgets/app_widgets.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod_template/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod_template/feature/claims/models/claim_service_item_model.dart';
-import 'package:flutter_riverpod_template/feature/claims/repositories/claim_repository.dart';
-import 'package:flutter_riverpod_template/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
 class ServiceItemCatalogPage extends ConsumerStatefulWidget {
   const ServiceItemCatalogPage({super.key});
@@ -81,8 +81,8 @@ class _ServiceItemCatalogPageState extends ConsumerState<ServiceItemCatalogPage>
           ),
           unselectedLabelStyle: const TextStyle(color: Colors.white70),
           tabs: [
-            Tab(text: 'Medical Services (${_services.length})'),
-            Tab(text: 'Medications / Items (${_items.length})'),
+            Tab(text: 'Services (${_services.length})'),
+            Tab(text: 'Items (${_items.length})'),
           ],
         ),
         actions: [
