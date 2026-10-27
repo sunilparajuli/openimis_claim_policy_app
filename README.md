@@ -377,13 +377,46 @@ flutter test --no-pub test/unit/screens/app_bottom_sheet_test.dart
 
 ## Building and releases
 
+Build both the development debug APK and production release APK:
+
 ```bash
-flutter build apk --release --flavor prod -t lib/main/main_prod.dart
+./scripts/build_android_apks.sh
+```
+
+Build only one variant:
+
+```bash
+./scripts/build_android_apks.sh debug
+./scripts/build_android_apks.sh release
+```
+
+The versioned APKs are copied to `outputs/android/`. The script uses `.env.dev`
+for the debug flavor and `.env.prod` for the release flavor. Set `FLUTTER_BIN`
+when Flutter is not available on `PATH`:
+
+```bash
+FLUTTER_BIN=/path/to/flutter/bin/flutter ./scripts/build_android_apks.sh
+```
+
+To force a clean build:
+
+```bash
+CLEAN_BUILD=1 ./scripts/build_android_apks.sh
+```
+
+Release builds are split by Android CPU architecture, so users download only
+the native libraries their device needs. Use `arm64-v8a` for most current Android
+phones, `armeabi-v7a` for older 32-bit phones, and `x86_64` for emulators.
+
+Equivalent direct production command:
+
+```bash
+flutter build apk --release --split-per-abi --flavor prod -t lib/main/main_prod.dart
 ```
 
 `.github/workflows/ci.yml` runs generation, analysis, tests, and the production APK
-build on pushes and pull requests. A tag such as `v1.0.0` publishes the APK to a
-GitHub Release.
+build on pushes and pull requests. A tag such as `v1.0.0` publishes the three
+architecture-specific APKs to a GitHub Release.
 
 The current Android release build uses debug signing for installable test APKs.
 Configure a protected upload keystore and GitHub secrets before Play Store use.

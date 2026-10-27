@@ -1,6 +1,8 @@
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/config/claim_form_requirements_provider.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
@@ -54,13 +56,15 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
     );
     final session = ref.read(userSessionProvider).value;
     _healthFacilityController = TextEditingController(
-      text: session?.healthFacilityName ?? '',
+      text: session?.healthFacilityCode ?? '',
     );
     _claimAdminController = TextEditingController(
       text: session?.claimAdminCode ?? '',
     );
-    final randomSuffix = DateTime.now().millisecondsSinceEpoch % 1000000;
-    _claimCodeController = TextEditingController(text: 'CLM-$randomSuffix');
+    final randomSuffix = DateTime.now().millisecondsSinceEpoch % 10000000;
+    _claimCodeController = TextEditingController(
+      text: 'C${randomSuffix.toString().padLeft(7, '0')}',
+    );
   }
 
   @override
@@ -80,13 +84,52 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
 
   double get _grandTotal => _servicesTotal + _itemsTotal;
 
-  Future<void> _submitClaim() async {
-    if (_primaryDiagnosis == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a Primary Diagnosis')),
-      );
-      return;
+  String _requiredLabel(String label, bool required) =>
+      required ? '$label *' : label;
+
+  bool _validateClaim() {
+    String? message;
+    final requirements =
+        ref.read(claimFormRequirementsProvider).value ??
+        const ClaimFormRequirements();
+    final claimCode = _claimCodeController.text.trim();
+
+    if (_chfIdController.text.trim().isEmpty) {
+      message = 'Please enter Insurance Number';
+    } else if (claimCode.isEmpty) {
+      message = 'Please enter Claim Code';
+    } else if (claimCode.length > 8) {
+      message = 'Claim Code must not exceed 8 characters';
+    } else if (_healthFacilityController.text.trim().isEmpty) {
+      message = 'Please enter Health Facility Code';
+    } else if (_claimAdminController.text.trim().isEmpty) {
+      message = 'Please enter Claim Administrator';
+    } else if (_primaryDiagnosis == null) {
+      message = 'Please select a Primary Diagnosis';
+    } else if (_selectedServices.isEmpty && _selectedItems.isEmpty) {
+      message = 'Add at least one Medical Service or Medical Item';
+    } else if (requirements.guaranteeNumber &&
+        _guaranteeNoController.text.trim().isEmpty) {
+      message = 'Guarantee Number is mandatory';
+    } else if (requirements.secondaryDiagnosis && _secondaryDiagnoses.isEmpty) {
+      message = 'Secondary Diagnosis is mandatory';
+    } else if (requirements.medicalService && _selectedServices.isEmpty) {
+      message = 'Medical Service is mandatory';
+    } else if (requirements.medicalItem && _selectedItems.isEmpty) {
+      message = 'Medical Item is mandatory';
     }
+
+    if (message == null) return true;
+    showAppFeedbackSheet(
+      context: context,
+      type: AppFeedbackType.warning,
+      message: context.tr(message),
+    );
+    return false;
+  }
+
+  Future<void> _submitClaim() async {
+    if (!_validateClaim()) return;
 
     setState(() => _isSubmitting = true);
 
@@ -125,7 +168,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
             color: CustomColors.SuccessGreen,
             size: 48,
           ),
-          title: const Text('Claim Submitted Successfully'),
+          title: Text(context.tr('Claim Submitted Successfully')),
           content: Text(
             'Claim ${submission.claimCode} has been sent to openIMIS FHIR server.\n\nTotal Claimed: ${_money.format(_grandTotal)}',
           ),
@@ -136,7 +179,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                 Navigator.pop(ctx);
                 Navigator.pop(context);
               },
-              child: const Text('Done'),
+              child: Text(context.tr('Done')),
             ),
           ],
         ),
@@ -146,30 +189,20 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       final message = error is ApiError
           ? error.userMessage
           : error.toString().replaceFirst('FormatException: ', '');
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(message),
-            behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: 'Post Claim Offline',
-              onPressed: _saveOfflineClaim,
-            ),
-          ),
-        );
+      showAppFeedbackSheet(
+        context: context,
+        type: AppFeedbackType.error,
+        message: message,
+        actionLabel: context.tr('Post Claim Offline'),
+        onAction: _saveOfflineClaim,
+      );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   Future<void> _saveOfflineClaim() async {
-    if (_primaryDiagnosis == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a Primary Diagnosis')),
-      );
-      return;
-    }
+    if (!_validateClaim()) return;
 
     setState(() => _isSubmitting = true);
 
@@ -205,7 +238,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
           color: CustomColors.BrandPurple,
           size: 48,
         ),
-        title: const Text('Claim Saved Offline (SQLite)'),
+        title: Text(context.tr('Claim Saved Offline (SQLite)')),
         content: Text(
           'Claim ${submission.claimCode} has been stored in the local openIMIS database and is ready to upload.',
         ),
@@ -216,7 +249,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text('Done'),
+            child: Text(context.tr('Done')),
           ),
         ],
       ),
@@ -226,9 +259,10 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
   @override
   Widget build(BuildContext context) {
     ref.watch(moneyFormatterProvider);
+    ref.watch(claimFormRequirementsProvider);
     return Scaffold(
       appBar: AppAppBar(
-        title: const Text('New Claim Form'),
+        title: Text(context.tr('New Claim Form')),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(24),
           child: Container(
@@ -239,7 +273,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
               children: [
                 Expanded(
                   child: Text(
-                    'Insuree: ${_chfIdController.text}',
+                    '${context.tr('Insuree')}: ${_chfIdController.text}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -251,7 +285,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                 const SizedBox(width: 12),
                 Flexible(
                   child: Text(
-                    'Running Total: ${_money.format(_grandTotal)}',
+                    '${context.tr('Running Total')}: ${_money.format(_grandTotal)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.end,
@@ -297,7 +331,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                       onPressed: _isSubmitting ? null : _submitClaim,
                       isLoading: _isSubmitting,
                       icon: const Icon(Icons.cloud_upload_outlined),
-                      label: const Text('Post Claim'),
+                      label: Text(context.tr('Post Claim')),
                       style: AppButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: CustomColors.BrandPurple,
@@ -316,9 +350,11 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                             Icons.storage_rounded,
                             color: CustomColors.BrandPurple,
                           ),
-                          label: const Text(
-                            'Post Claim Offline',
-                            style: TextStyle(color: CustomColors.BrandPurple),
+                          label: Text(
+                            context.tr('Post Claim Offline'),
+                            style: const TextStyle(
+                              color: CustomColors.BrandPurple,
+                            ),
                           ),
                           style: AppButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -335,7 +371,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                         style: AppButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        child: const Text('Back'),
+                        child: Text(context.tr('Back')),
                       ),
                     ],
                   ),
@@ -356,7 +392,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Continue'),
+                    child: Text(context.tr('Continue')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -367,7 +403,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                     style: AppButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Back'),
+                    child: Text(context.tr('Back')),
                   ),
               ],
             ),
@@ -375,27 +411,29 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         },
         steps: [
           Step(
-            title: const Text('Claim Details'),
+            title: Text(context.tr('Claim Details')),
             isActive: _currentStep >= 0,
             content: _buildStep1FacilityInfo(),
           ),
           Step(
-            title: const Text('Diagnosis'),
+            title: Text(context.tr('Diagnosis')),
             isActive: _currentStep >= 1,
             content: _buildStep2Diagnoses(),
           ),
           Step(
-            title: Text('Services (${_selectedServices.length})'),
+            title: Text(
+              '${context.tr('Services')} (${_selectedServices.length})',
+            ),
             isActive: _currentStep >= 2,
             content: _buildStep3Services(),
           ),
           Step(
-            title: Text('Items (${_selectedItems.length})'),
+            title: Text('${context.tr('Items')} (${_selectedItems.length})'),
             isActive: _currentStep >= 3,
             content: _buildStep4Items(),
           ),
           Step(
-            title: const Text('Review'),
+            title: Text(context.tr('Review')),
             isActive: _currentStep >= 4,
             content: _buildStep5Review(),
           ),
@@ -405,45 +443,48 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
   }
 
   Widget _buildStep1FacilityInfo() {
+    final requirements =
+        ref.watch(claimFormRequirementsProvider).value ??
+        const ClaimFormRequirements();
     return Column(
       children: [
         AppTextField(
           controller: _chfIdController,
-          decoration: const InputDecoration(
-            labelText: 'Insurance No',
-            prefixIcon: Icon(Icons.badge),
+          decoration: InputDecoration(
+            labelText: '${context.tr('Insurance No')} *',
+            prefixIcon: const Icon(Icons.badge),
           ),
         ),
         const SizedBox(height: 12),
         AppTextField(
           controller: _claimCodeController,
-          decoration: const InputDecoration(
-            labelText: 'Claim Code',
-            prefixIcon: Icon(Icons.tag),
+          decoration: InputDecoration(
+            labelText: '${context.tr('Claim Code')} *',
+            prefixIcon: const Icon(Icons.tag),
           ),
         ),
         const SizedBox(height: 12),
         AppTextField(
           controller: _healthFacilityController,
-          decoration: const InputDecoration(
-            labelText: 'Health Facility Code',
-            prefixIcon: Icon(Icons.local_hospital),
+          decoration: InputDecoration(
+            labelText: '${context.tr('Health Facility Code')} *',
+            prefixIcon: const Icon(Icons.local_hospital),
           ),
         ),
         const SizedBox(height: 12),
         AppTextField(
           controller: _claimAdminController,
-          decoration: const InputDecoration(
-            labelText: 'Claim Admin',
-            prefixIcon: Icon(Icons.person),
+          decoration: InputDecoration(
+            labelText: '${context.tr('Claim Admin')} *',
+            prefixIcon: const Icon(Icons.person),
           ),
         ),
         const SizedBox(height: 12),
         AppDropdownField<ClaimVisitType>(
           value: _visitType,
-          decoration: const InputDecoration(
-            labelText: 'Visit Type',
-            prefixIcon: Icon(Icons.emergency),
+          decoration: InputDecoration(
+            labelText: '${context.tr('Visit Type')} *',
+            prefixIcon: const Icon(Icons.emergency),
           ),
           items: ClaimVisitType.values.map((vt) {
             return DropdownMenuItem(value: vt, child: Text(vt.label));
@@ -455,9 +496,12 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         const SizedBox(height: 12),
         AppTextField(
           controller: _guaranteeNoController,
-          decoration: const InputDecoration(
-            labelText: 'Guarantee No',
-            prefixIcon: Icon(Icons.security),
+          decoration: InputDecoration(
+            labelText: _requiredLabel(
+              'Guarantee No',
+              requirements.guaranteeNumber,
+            ),
+            prefixIcon: const Icon(Icons.security),
           ),
         ),
       ],
@@ -471,14 +515,17 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Diagnosis', style: TextStyle(fontWeight: FontWeight.bold)),
+        Text(
+          '${context.tr('Diagnosis')} *',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
         AppAutocompleteField<Diagnosis>(
           key: ValueKey(_primaryDiagnosis?.code),
           options: allDiagnoses,
           initialValue: _primaryDiagnosis,
-          labelText: 'Diagnosis',
-          hintText: 'Type an ICD code or diagnosis name',
+          labelText: '${context.tr('Diagnosis')} *',
+          hintText: context.tr('Type an ICD code or diagnosis name'),
           prefixIcon: const Icon(Icons.search),
           displayStringForOption: (diagnosis) =>
               '${diagnosis.code}: ${diagnosis.name}',
@@ -493,9 +540,14 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
           onCleared: () => setState(() => _primaryDiagnosis = null),
         ),
         const SizedBox(height: 20),
-        const Text(
-          'Additional Diagnoses',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        Text(
+          _requiredLabel(
+            'Additional Diagnoses',
+            (ref.watch(claimFormRequirementsProvider).value ??
+                    const ClaimFormRequirements())
+                .secondaryDiagnosis,
+          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         ..._secondaryDiagnoses.map(
@@ -518,28 +570,32 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
           variant: AppButtonVariant.secondary,
           onPressed: () => _showAddDiagnosisDialog(allDiagnoses),
           icon: const Icon(Icons.add),
-          label: const Text('Add Diagnosis'),
+          label: Text(context.tr('Add Diagnosis')),
         ),
       ],
     );
   }
 
   Widget _buildStep3Services() {
+    final required =
+        (ref.watch(claimFormRequirementsProvider).value ??
+                const ClaimFormRequirements())
+            .medicalService;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppMoneySummaryRow(
-          label: 'Services',
+          label: _requiredLabel('Services', required),
           value: 'Subtotal: ${_money.format(_servicesTotal)}',
           emphasized: true,
         ),
         const SizedBox(height: 8),
         if (_selectedServices.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Text(
-              'No services added yet. Tap below to add a service.',
-              style: TextStyle(color: Colors.grey),
+              context.tr('No services added yet. Tap below to add a service.'),
+              style: const TextStyle(color: Colors.grey),
             ),
           )
         else
@@ -576,28 +632,32 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
           variant: AppButtonVariant.primary,
           onPressed: _showAddServiceDialog,
           icon: const Icon(Icons.add_circle_outline),
-          label: const Text('Add Services'),
+          label: Text(context.tr('Add Services')),
         ),
       ],
     );
   }
 
   Widget _buildStep4Items() {
+    final required =
+        (ref.watch(claimFormRequirementsProvider).value ??
+                const ClaimFormRequirements())
+            .medicalItem;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppMoneySummaryRow(
-          label: 'Items',
+          label: _requiredLabel('Items', required),
           value: 'Subtotal: ${_money.format(_itemsTotal)}',
           emphasized: true,
         ),
         const SizedBox(height: 8),
         if (_selectedItems.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Text(
-              'No medications/items added yet.',
-              style: TextStyle(color: Colors.grey),
+              context.tr('No medications/items added yet.'),
+              style: const TextStyle(color: Colors.grey),
             ),
           )
         else
@@ -634,7 +694,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
           variant: AppButtonVariant.primary,
           onPressed: _showAddItemDialog,
           icon: const Icon(Icons.add_circle_outline),
-          label: const Text('Add Items'),
+          label: Text(context.tr('Add Items')),
         ),
       ],
     );
@@ -650,9 +710,9 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                const Text(
-                  'Total Claim Amount',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                Text(
+                  context.tr('Total Claim Amount'),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -672,8 +732,12 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                   spacing: 16,
                   runSpacing: 6,
                   children: [
-                    Text('Services: ${_money.format(_servicesTotal)}'),
-                    Text('Medications: ${_money.format(_itemsTotal)}'),
+                    Text(
+                      '${context.tr('Services')}: ${_money.format(_servicesTotal)}',
+                    ),
+                    Text(
+                      '${context.tr('Medications')}: ${_money.format(_itemsTotal)}',
+                    ),
                   ],
                 ),
               ],
@@ -683,17 +747,17 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         const SizedBox(height: 12),
         ListTile(
           dense: true,
-          title: const Text('Insurance No'),
+          title: Text(context.tr('Insurance No')),
           subtitle: Text(_chfIdController.text),
         ),
         ListTile(
           dense: true,
-          title: const Text('Health Facility Code'),
+          title: Text(context.tr('Health Facility Code')),
           subtitle: Text(_healthFacilityController.text),
         ),
         ListTile(
           dense: true,
-          title: const Text('Diagnosis'),
+          title: Text(context.tr('Diagnosis')),
           subtitle: Text(
             _primaryDiagnosis != null
                 ? '${_primaryDiagnosis!.code} - ${_primaryDiagnosis!.name}'
@@ -702,7 +766,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         ),
         ListTile(
           dense: true,
-          title: const Text('Visit Type'),
+          title: Text(context.tr('Visit Type')),
           subtitle: Text(_visitType.label),
         ),
         const SizedBox(height: 12),
@@ -715,17 +779,19 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
               color: CustomColors.BrandPurple.withValues(alpha: 0.2),
             ),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.offline_bolt_outlined,
                 color: CustomColors.BrandPurple,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Offline Mode: the claim can be stored locally and uploaded later.',
-                  style: TextStyle(fontSize: 12),
+                  context.tr(
+                    'Offline Mode: the claim can be stored locally and uploaded later.',
+                  ),
+                  style: const TextStyle(fontSize: 12),
                 ),
               ),
             ],
@@ -748,20 +814,22 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                 !pendingDiagnoses.any((item) => item.code == diagnosis.code),
           );
           return AppSheetContent(
-            title: const Text('Add Diagnosis'),
+            title: Text(context.tr('Add Diagnosis')),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Search by ICD-10 code or diagnosis name. Select as many as needed, then press Done.',
+                Text(
+                  context.tr(
+                    'Search by ICD-10 code or diagnosis name. Select as many as needed, then press Done.',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 AppAutocompleteField<Diagnosis>(
                   key: ValueKey(pendingDiagnoses.length),
                   options: availableDiagnoses,
-                  labelText: 'Diagnosis',
-                  hintText: 'Type an ICD code or diagnosis name',
+                  labelText: context.tr('Diagnosis'),
+                  hintText: context.tr('Type an ICD code or diagnosis name'),
                   prefixIcon: const Icon(Icons.search),
                   displayStringForOption: (diagnosis) =>
                       '${diagnosis.code}: ${diagnosis.name}',
@@ -773,7 +841,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                 if (pendingDiagnoses.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Text(
-                    'Selected (${pendingDiagnoses.length})',
+                    '${context.tr('Selected')} (${pendingDiagnoses.length})',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
@@ -798,7 +866,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
               AppButton(
                 variant: AppButtonVariant.text,
                 onPressed: () => Navigator.pop(ctx),
-                label: const Text('Cancel'),
+                label: Text(context.tr('Cancel')),
               ),
               AppButton(
                 onPressed: () {
@@ -809,7 +877,9 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                   });
                   Navigator.pop(ctx);
                 },
-                label: Text('Done (${pendingDiagnoses.length})'),
+                label: Text(
+                  '${context.tr('Done')} (${pendingDiagnoses.length})',
+                ),
               ),
             ],
           );
@@ -828,14 +898,14 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       heightFactor: 0.62,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) => AppSheetContent(
-          title: const Text('Add Medical Service'),
+          title: Text(context.tr('Add Medical Service')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               AppAutocompleteField<MedicalService>(
                 options: services,
-                labelText: 'Medical Service',
-                hintText: 'Type a service name or code',
+                labelText: context.tr('Medical Service'),
+                hintText: context.tr('Type a service name or code'),
                 prefixIcon: const Icon(Icons.medical_services_outlined),
                 displayStringForOption: (service) =>
                     '${service.code} — ${service.name} (${_money.format(service.price)})',
@@ -848,7 +918,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Quantity:'),
+                  Text(context.tr('Quantity:')),
                   Row(
                     children: [
                       IconButton(
@@ -878,7 +948,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
             AppButton(
               variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(context.tr('Cancel')),
             ),
             AppButton(
               variant: AppButtonVariant.primary,
@@ -895,7 +965,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                       });
                       Navigator.pop(ctx);
                     },
-              child: const Text('Add'),
+              child: Text(context.tr('Add')),
             ),
           ],
         ),
@@ -913,14 +983,14 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       heightFactor: 0.62,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) => AppSheetContent(
-          title: const Text('Add Medication / Item'),
+          title: Text(context.tr('Add Medication / Item')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               AppAutocompleteField<MedicationItem>(
                 options: items,
-                labelText: 'Medication / Item',
-                hintText: 'Type an item name or code',
+                labelText: context.tr('Medication / Item'),
+                hintText: context.tr('Type an item name or code'),
                 prefixIcon: const Icon(Icons.medication_outlined),
                 displayStringForOption: (item) =>
                     '${item.code} — ${item.name} (${_money.format(item.price)})',
@@ -932,7 +1002,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Quantity:'),
+                  Text(context.tr('Quantity:')),
                   Row(
                     children: [
                       IconButton(
@@ -962,7 +1032,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
             AppButton(
               variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(context.tr('Cancel')),
             ),
             AppButton(
               variant: AppButtonVariant.primary,
@@ -976,7 +1046,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                       });
                       Navigator.pop(ctx);
                     },
-              child: const Text('Add'),
+              child: Text(context.tr('Add')),
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/data/remote/graphql/graphql_service_provider.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
@@ -87,11 +88,10 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _isRenewing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Theme.of(context).colorScheme.error,
-          content: Text('Policy renewal failed: $error'),
-        ),
+      showAppFeedbackSheet(
+        context: context,
+        type: AppFeedbackType.error,
+        message: 'Policy renewal failed: $error',
       );
       return;
     }
@@ -108,7 +108,7 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
           color: CustomColors.SuccessGreen,
           size: 48,
         ),
-        title: const Text('Policy Renewed Successfully'),
+        title: Text(context.tr('Policy Renewed Successfully')),
         content: Text(
           'Policy for Insuree ${_chfIdController.text} has been renewed.\n\n'
           'Plan: $_selectedProduct\n'
@@ -122,7 +122,7 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text('Done'),
+            child: Text(context.tr('Done')),
           ),
         ],
       ),
@@ -133,7 +133,7 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
   Widget build(BuildContext context) {
     ref.watch(moneyFormatterProvider);
     return Scaffold(
-      appBar: AppAppBar(title: const Text('Policy Renewal Form')),
+      appBar: AppAppBar(title: Text(context.tr('Policy Renewal Form'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -151,9 +151,9 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Insuree & Policy Identification',
-                        style: TextStyle(
+                      Text(
+                        context.tr('Insuree & Policy Identification'),
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -161,10 +161,12 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
                       const SizedBox(height: 12),
                       AppTextField(
                         controller: _chfIdController,
-                        decoration: const InputDecoration(
-                          labelText: 'Head of Family / Insuree CHF ID',
-                          prefixIcon: Icon(Icons.badge),
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: context.tr(
+                            'Head of Family / Insuree CHF ID',
+                          ),
+                          prefixIcon: const Icon(Icons.badge),
+                          border: const OutlineInputBorder(),
                         ),
                         validator: (val) => val == null || val.isEmpty
                             ? 'CHF ID is required'
@@ -173,10 +175,12 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
                       const SizedBox(height: 16),
                       AppDropdownField<String>(
                         value: _selectedProduct,
-                        decoration: const InputDecoration(
-                          labelText: 'Health Insurance Plan',
-                          prefixIcon: Icon(Icons.health_and_safety_outlined),
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: context.tr('Health Insurance Plan'),
+                          prefixIcon: const Icon(
+                            Icons.health_and_safety_outlined,
+                          ),
+                          border: const OutlineInputBorder(),
                         ),
                         items: _productPremiums.keys.map((p) {
                           return DropdownMenuItem(value: p, child: Text(p));
@@ -206,9 +210,9 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Payment & Receipt Details',
-                        style: TextStyle(
+                      Text(
+                        context.tr('Payment & Receipt Details'),
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -216,25 +220,27 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
                       const SizedBox(height: 12),
                       AppDropdownField<String>(
                         value: _payerType,
-                        decoration: const InputDecoration(
-                          labelText: 'Payer Type',
-                          prefixIcon: Icon(
+                        decoration: InputDecoration(
+                          labelText: context.tr('Payer Type'),
+                          prefixIcon: const Icon(
                             Icons.account_balance_wallet_outlined,
                           ),
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                         ),
-                        items: const [
+                        items: [
                           DropdownMenuItem(
                             value: 'Self',
-                            child: Text('Self (Individual / Household)'),
+                            child: Text(
+                              context.tr('Self (Individual / Household)'),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'Government',
-                            child: Text('Government Subsidy'),
+                            child: Text(context.tr('Government Subsidy')),
                           ),
                           DropdownMenuItem(
                             value: 'Donor',
-                            child: Text('Donor / NGO Grant'),
+                            child: Text(context.tr('Donor / NGO Grant')),
                           ),
                         ],
                         onChanged: (val) => setState(() => _payerType = val!),
@@ -242,19 +248,21 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
                       const SizedBox(height: 16),
                       AppTextField(
                         controller: _payerNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Payer Name',
-                          prefixIcon: Icon(Icons.person_outline),
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: context.tr('Payer Name'),
+                          prefixIcon: const Icon(Icons.person_outline),
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 16),
                       AppTextField(
                         controller: _receiptNumberController,
-                        decoration: const InputDecoration(
-                          labelText: 'Bank / Mobile Money Receipt Number',
-                          prefixIcon: Icon(Icons.receipt_long),
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: context.tr(
+                            'Bank / Mobile Money Receipt Number',
+                          ),
+                          prefixIcon: const Icon(Icons.receipt_long),
+                          border: const OutlineInputBorder(),
                         ),
                         validator: (val) => val == null || val.isEmpty
                             ? 'Receipt number is required'
@@ -277,9 +285,11 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Calculated Premium:',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Text(
+                              context.tr('Calculated Premium:'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               _money.format(_premiumAmount),
@@ -303,7 +313,7 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
                 onPressed: _isRenewing ? null : _renewPolicy,
                 isLoading: _isRenewing,
                 icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Confirm & Submit Policy Renewal'),
+                label: Text(context.tr('Confirm & Submit Policy Renewal')),
                 style: AppButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: CustomColors.BrandPurple,

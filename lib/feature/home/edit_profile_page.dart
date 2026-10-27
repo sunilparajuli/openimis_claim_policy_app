@@ -2,6 +2,7 @@ import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dar
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/ui_utils.dart';
 
 @RoutePage()
@@ -32,12 +33,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppAppBar(
-        title: const Text('Edit Profile'),
+        title: Text(context.tr('Edit Profile')),
         actions: [
           AppButton(
             variant: AppButtonVariant.text,
             onPressed: _saveProfile,
-            child: const Text('Save'),
+            child: Text(context.tr('Save')),
           ),
         ],
       ),
@@ -89,8 +90,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               AppTextField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: 'Full Name',
-                  hintText: 'Enter your full name',
+                  labelText: context.tr('Full Name'),
+                  hintText: context.tr('Enter your full name'),
                   prefixIcon: const Icon(Icons.person_outline),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -109,8 +110,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               AppTextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'Email',
-                  hintText: 'Enter your email',
+                  labelText: context.tr('Email'),
+                  hintText: context.tr('Enter your email'),
                   prefixIcon: const Icon(Icons.email_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -133,8 +134,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               AppTextField(
                 controller: _phoneController,
                 decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  hintText: 'Enter your phone number',
+                  labelText: context.tr('Phone Number'),
+                  hintText: context.tr('Enter your phone number'),
                   prefixIcon: const Icon(Icons.phone_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -148,8 +149,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               AppTextField(
                 controller: _bioController,
                 decoration: InputDecoration(
-                  labelText: 'Bio',
-                  hintText: 'Tell us about yourself',
+                  labelText: context.tr('Bio'),
+                  hintText: context.tr('Tell us about yourself'),
                   prefixIcon: const Icon(Icons.info_outline),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -169,7 +170,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   variant: AppButtonVariant.primary,
                   onPressed: _saveProfile,
                   icon: const Icon(Icons.save),
-                  label: const Text('Save Changes'),
+                  label: Text(context.tr('Save Changes')),
                 ),
               ),
             ],

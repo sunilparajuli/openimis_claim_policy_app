@@ -1,6 +1,7 @@
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/data/app_providers/app_provider.dart';
 import 'package:openimis_claim_policy_app/feature/claims/presentation/claim_wizard_page.dart';
@@ -189,7 +190,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
 
     return Scaffold(
       appBar: AppAppBar(
-        title: const Text('Claims Listing'),
+        title: Text(context.tr('Claims Listing')),
         bottom: TabBar(
           controller: _tabController,
           // Status labels and counts must retain their natural width on phones
@@ -210,7 +211,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(tab.name.toUpperCase()),
+                    Text(context.tr(tab.label).toUpperCase()),
                     const SizedBox(width: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -244,7 +245,9 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
             child: AppTextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search by Claim Code, Insurance No, or Patient Name',
+                hintText: context.tr(
+                  'Search by Claim Code, Insurance No, or Patient Name',
+                ),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -290,7 +293,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'No ${tab.label} Claims Found',
+                                context.tr('No ${tab.label} Claims Found'),
                                 style: const TextStyle(
                                   color: Colors.grey,
                                   fontWeight: FontWeight.w500,
@@ -326,7 +329,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
         backgroundColor: CustomColors.BrandPurple,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('New Claim'),
+        label: Text(context.tr('New Claim')),
       ),
     );
   }
@@ -368,7 +371,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      claim.status.label.toUpperCase(),
+                      context.tr(claim.status.label).toUpperCase(),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -518,7 +521,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
                       ),
                     ),
                     Text(
-                      'openIMIS FHIR Claim Review',
+                      context.tr('openIMIS FHIR Claim Review'),
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -536,7 +539,7 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    claim.status.label.toUpperCase(),
+                    context.tr(claim.status.label).toUpperCase(),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -550,22 +553,28 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
             Expanded(
               child: ListView(
                 children: [
-                  _detailRow('Insuree Name', claim.insureeName),
-                  _detailRow('Insurance No', claim.insureeChfId),
-                  _detailRow('Health Facility', claim.healthFacility),
-                  _detailRow('Date of Submission', claim.date),
-                  _detailRow('Main Dg', claim.primaryDiagnosis),
-                  _detailRow('Total Claimed', _money.format(claim.totalAmount)),
+                  _detailRow(context.tr('Insuree Name'), claim.insureeName),
+                  _detailRow(context.tr('Insurance No'), claim.insureeChfId),
+                  _detailRow(
+                    context.tr('Health Facility'),
+                    claim.healthFacility,
+                  ),
+                  _detailRow(context.tr('Date of Submission'), claim.date),
+                  _detailRow(context.tr('Main Dg'), claim.primaryDiagnosis),
+                  _detailRow(
+                    context.tr('Total Claimed'),
+                    _money.format(claim.totalAmount),
+                  ),
                   if (claim.rejectionReason != null)
                     _detailRow(
-                      'Rejection Reason',
+                      context.tr('Rejection Reason'),
                       claim.rejectionReason!,
                       isAlert: true,
                     ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Services:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    context.tr('Services:'),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   ...claim.services.map(
@@ -585,9 +594,9 @@ class _ClaimsListingPageState extends ConsumerState<ClaimsListingPage>
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Medications & Consumables:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    context.tr('Medications & Consumables:'),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   ...claim.medications.map(

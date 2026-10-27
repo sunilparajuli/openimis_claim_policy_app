@@ -2,6 +2,7 @@ import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dar
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:openimis_claim_policy_app/feature/shared/app_flavour/app_config.dart';
 import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
 import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
@@ -46,7 +47,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           IconButton(
             onPressed: () => context.router.push(const SettingsRoute()),
             icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
+            tooltip: context.tr('Settings'),
           ),
         ],
       ),
@@ -101,7 +102,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                'Account',
+                context.tr('Account'),
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -114,8 +115,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             context,
             semanticsId: 'profile_edit_profile',
             icon: Icons.person_outline,
-            title: 'Edit Profile',
-            subtitle: 'Update your personal information',
+            title: context.tr('Edit Profile'),
+            subtitle: context.tr('Update your personal information'),
             onTap: () {
               context.router.push(const EditProfileRoute());
             },
@@ -130,7 +131,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
-              'App',
+              context.tr('App'),
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -142,8 +143,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             context,
             semanticsId: 'profile_settings_menu',
             icon: Icons.settings_outlined,
-            title: 'Settings',
-            subtitle: 'App preferences and configuration',
+            title: context.tr('Settings'),
+            subtitle: context.tr('App preferences and configuration'),
             onTap: () => context.router.push(const SettingsRoute()),
           ),
           const SizedBox(height: 8),
@@ -151,8 +152,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildMenuCard(
             context,
             icon: Icons.help_outline,
-            title: 'Help & Support',
-            subtitle: 'Get help and contact support',
+            title: context.tr('Help & Support'),
+            subtitle: context.tr('Get help and contact support'),
             onTap: () => _showHelpSupportBottomSheet(context),
           ),
 
@@ -179,7 +180,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Logout',
+                        context.tr('Logout'),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w600,
@@ -391,8 +392,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       await launchUrl(uri);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch phone app')),
+        showAppFeedbackSheet(
+          context: context,
+          type: AppFeedbackType.error,
+          message: context.tr('Could not launch phone app'),
         );
       }
     }
@@ -404,8 +407,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch WhatsApp')),
+        showAppFeedbackSheet(
+          context: context,
+          type: AppFeedbackType.error,
+          message: context.tr('Could not launch WhatsApp'),
         );
       }
     }
@@ -421,8 +426,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       await launchUrl(uri);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch email app')),
+        showAppFeedbackSheet(
+          context: context,
+          type: AppFeedbackType.error,
+          message: context.tr('Could not launch email app'),
         );
       }
     }
@@ -432,13 +439,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     showAppBottomSheet(
       context: context,
       builder: (context) => AppSheetContent(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: Text(context.tr('Logout')),
+        content: Text(context.tr('Are you sure you want to logout?')),
         actions: [
           AppButton(
             variant: AppButtonVariant.text,
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           AppButton(
             variant: AppButtonVariant.primary,
@@ -450,7 +457,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Logout'),
+            child: Text(context.tr('Logout')),
           ),
         ],
       ),

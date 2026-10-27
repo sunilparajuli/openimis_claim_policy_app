@@ -1,6 +1,7 @@
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 /// Common WebView page for displaying web content
@@ -64,7 +65,7 @@ class _CommonWebviewPageState extends State<CommonWebviewPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => _controller.reload(),
-            tooltip: 'Refresh',
+            tooltip: context.tr('Refresh'),
           ),
         ],
       ),

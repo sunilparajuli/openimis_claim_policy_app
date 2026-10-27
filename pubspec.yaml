@@ -13,28 +13,19 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
-  cupertino_icons: ^1.0.2
   flutter_riverpod: ^3.3.1
   riverpod_annotation: ^4.0.2
   freezed_annotation: ^3.1.0
-  retrofit: ^4.0.1
   dio: ^5.10.0
   json_annotation: ^4.11.0
-  flutter_hooks: ^0.21.3+1
   auto_route: ^11.1.0
-  hooks_riverpod: ^3.3.1
-  riverpod: ^3.2.1
   webview_flutter: ^4.14.1
   package_info_plus: ^10.2.1
   url_launcher: ^6.3.1
   # Security
   flutter_secure_storage: ^10.3.1
   envied: ^1.3.8
-  # Testing
-  mockito: ^5.4.0
-  infinite_scroll_pagination: ^5.1.1
   sqflite: ^2.4.4+1
-  path_provider: ^2.1.6
   path: ^1.9.1
   local_auth: ^3.0.2
 
@@ -42,7 +33,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  retrofit_generator: ^10.2.6
   riverpod_generator: ^4.0.3
   # used with freezed model
   json_serializable: ^6.13.0
@@ -54,7 +44,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
+    - assets/images/openimis-logo.png
     - assets/config/
   fonts:
     - family: Poppins
@@ -66,14 +56,4 @@ flutter:
         - asset: assets/fonts/Poppins-SemiBold.ttf
           weight: 600
         - asset: assets/fonts/Poppins-Bold.ttf
-          weight: 700
-    - family: Montserrat
-      fonts:
-        - asset: assets/fonts/Montserrat-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Montserrat-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Montserrat-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Montserrat-Bold.ttf
           weight: 700

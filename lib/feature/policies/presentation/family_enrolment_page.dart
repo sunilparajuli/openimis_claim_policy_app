@@ -1,6 +1,7 @@
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:openimis_claim_policy_app/feature/insuree/presentation/insuree_enquiry_page.dart';
 import 'package:openimis_claim_policy_app/feature/policies/presentation/policy_renewal_page.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
@@ -84,33 +85,33 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) => AppSheetContent(
-          title: const Text('New Household Enrolment'),
+          title: Text(context.tr('New Household Enrolment')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppTextField(
                   controller: headController,
-                  decoration: const InputDecoration(
-                    labelText: 'Head of Household Name',
-                    prefixIcon: Icon(Icons.person),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Head of Household Name'),
+                    prefixIcon: const Icon(Icons.person),
                   ),
                 ),
                 const SizedBox(height: 12),
                 AppTextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number (SMS confirmation)',
-                    prefixIcon: Icon(Icons.phone),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Phone Number (SMS confirmation)'),
+                    prefixIcon: const Icon(Icons.phone),
                   ),
                 ),
                 const SizedBox(height: 12),
                 AppDropdownField<String>(
                   value: selectedRegion,
-                  decoration: const InputDecoration(
-                    labelText: 'Region',
-                    prefixIcon: Icon(Icons.map),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Region'),
+                    prefixIcon: const Icon(Icons.map),
                   ),
                   items:
                       const [
@@ -130,9 +131,9 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                 const SizedBox(height: 12),
                 AppDropdownField<String>(
                   value: selectedPoverty,
-                  decoration: const InputDecoration(
-                    labelText: 'Poverty Status',
-                    prefixIcon: Icon(Icons.monetization_on_outlined),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Poverty Status'),
+                    prefixIcon: const Icon(Icons.monetization_on_outlined),
                   ),
                   items: const ['Non-Poor', 'Poor', 'Indigent / Subsidized']
                       .map((p) => DropdownMenuItem(value: p, child: Text(p)))
@@ -143,9 +144,9 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                 const SizedBox(height: 12),
                 AppDropdownField<String>(
                   value: selectedFamilyType,
-                  decoration: const InputDecoration(
-                    labelText: 'Family Type',
-                    prefixIcon: Icon(Icons.group),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Family Type'),
+                    prefixIcon: const Icon(Icons.group),
                   ),
                   items: const ['Nuclear', 'Extended']
                       .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -160,7 +161,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
             AppButton(
               variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(context.tr('Cancel')),
             ),
             AppButton(
               variant: AppButtonVariant.primary,
@@ -193,16 +194,14 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                 );
                 setState(() => _families.insert(0, newFamily));
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: CustomColors.SuccessGreen,
-                    content: Text(
+                showAppFeedbackSheet(
+                  context: context,
+                  type: AppFeedbackType.success,
+                  message:
                       'Family "${newFamily.headName}" enrolled with card $newChfId',
-                    ),
-                  ),
                 );
               },
-              child: const Text('Enrol Family'),
+              child: Text(context.tr('Enrol Family')),
             ),
           ],
         ),
@@ -229,7 +228,9 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 12),
-              const Expanded(child: Text('Add Family Member / Dependent')),
+              Expanded(
+                child: Text(context.tr('Add Family Member / Dependent')),
+              ),
             ],
           ),
           content: Column(
@@ -237,54 +238,72 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
             children: [
               AppTextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
+                decoration: InputDecoration(
+                  labelText: context.tr('Full Name'),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
               ),
               const SizedBox(height: 12),
               AppTextField(
                 controller: chfIdController,
-                decoration: const InputDecoration(
-                  labelText: 'Insuree CHF ID',
+                decoration: InputDecoration(
+                  labelText: context.tr('Insuree CHF ID'),
                   prefixIcon: Icon(Icons.badge_outlined),
                 ),
               ),
               const SizedBox(height: 12),
               AppDropdownField<String>(
                 value: relationship,
-                decoration: const InputDecoration(
-                  labelText: 'Relationship',
-                  prefixIcon: Icon(Icons.family_restroom_outlined),
+                decoration: InputDecoration(
+                  labelText: context.tr('Relationship'),
+                  prefixIcon: const Icon(Icons.family_restroom_outlined),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'Spouse', child: Text('Spouse')),
-                  DropdownMenuItem(value: 'Child', child: Text('Child')),
+                items: [
+                  DropdownMenuItem(
+                    value: 'Spouse',
+                    child: Text(context.tr('Spouse')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Child',
+                    child: Text(context.tr('Child')),
+                  ),
                   DropdownMenuItem(
                     value: 'Parent / Dependent',
-                    child: Text('Parent / Dependent'),
+                    child: Text(context.tr('Parent / Dependent')),
                   ),
-                  DropdownMenuItem(value: 'Other', child: Text('Other')),
+                  DropdownMenuItem(
+                    value: 'Other',
+                    child: Text(context.tr('Other')),
+                  ),
                 ],
                 onChanged: (value) => setModalState(() => relationship = value),
               ),
               const SizedBox(height: 12),
               AppDropdownField<String>(
                 value: gender,
-                decoration: const InputDecoration(
-                  labelText: 'Gender',
+                decoration: InputDecoration(
+                  labelText: context.tr('Gender'),
                   prefixIcon: Icon(Icons.wc_outlined),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'Male', child: Text('Male')),
-                  DropdownMenuItem(value: 'Female', child: Text('Female')),
-                  DropdownMenuItem(value: 'Other', child: Text('Other')),
+                items: [
+                  DropdownMenuItem(
+                    value: 'Male',
+                    child: Text(context.tr('Male')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Female',
+                    child: Text(context.tr('Female')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Other',
+                    child: Text(context.tr('Other')),
+                  ),
                 ],
                 onChanged: (value) => setModalState(() => gender = value),
               ),
               const SizedBox(height: 12),
               AppDateField(
-                labelText: 'Date of Birth',
+                labelText: context.tr('Date of Birth'),
                 value: dateOfBirth,
                 firstDate: DateTime(1900),
                 lastDate: DateTime.now(),
@@ -296,7 +315,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
             AppButton(
               variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(sheetContext),
-              label: const Text('Cancel'),
+              label: Text(context.tr('Cancel')),
             ),
             AppButton(
               onPressed: () {
@@ -305,10 +324,10 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                     relationship == null ||
                     gender == null ||
                     dateOfBirth == null) {
-                  ScaffoldMessenger.of(sheetContext).showSnackBar(
-                    const SnackBar(
-                      content: Text('Complete all family member fields.'),
-                    ),
+                  showAppFeedbackSheet(
+                    context: sheetContext,
+                    type: AppFeedbackType.warning,
+                    message: context.tr('Complete all family member fields.'),
                   );
                   return;
                 }
@@ -324,7 +343,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                 );
               },
               icon: const Icon(Icons.person_add_alt_1_rounded),
-              label: const Text('Add Member'),
+              label: Text(context.tr('Add Member')),
             ),
           ],
         ),
@@ -456,17 +475,17 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                               if (member == null || !mounted) return;
                               setState(() => family.members.add(member));
                               setSheetState(() {});
-                              ScaffoldMessenger.of(this.context).showSnackBar(
-                                SnackBar(
-                                  backgroundColor: CustomColors.SuccessGreen,
-                                  content: Text(
+                              showAppFeedbackSheet(
+                                context: this.context,
+                                type: AppFeedbackType.success,
+                                message:
                                     '${member.fullName} added to the family.',
-                                  ),
-                                ),
                               );
                             },
                             icon: const Icon(Icons.person_add),
-                            label: const Text('Add Family Member / Dependent'),
+                            label: Text(
+                              context.tr('Add Family Member / Dependent'),
+                            ),
                           ),
                         ],
                       ),
@@ -584,7 +603,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
     }).toList();
 
     return Scaffold(
-      appBar: AppAppBar(title: const Text('Family & Insuree Enrolment')),
+      appBar: AppAppBar(title: Text(context.tr('Family & Insuree Enrolment'))),
       body: Column(
         children: [
           Padding(
@@ -592,7 +611,9 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
             child: AppTextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search family by head name, card number, village...',
+                hintText: context.tr(
+                  'Search family by head name, card number, village...',
+                ),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -729,7 +750,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
         backgroundColor: CustomColors.BrandPurple,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Enrol Family'),
+        label: Text(context.tr('Enrol Family')),
       ),
     );
   }

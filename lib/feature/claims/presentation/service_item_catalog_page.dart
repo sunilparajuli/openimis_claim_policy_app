@@ -1,6 +1,7 @@
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_repository.dart';
@@ -68,7 +69,7 @@ class _ServiceItemCatalogPageState extends ConsumerState<ServiceItemCatalogPage>
 
     return Scaffold(
       appBar: AppAppBar(
-        title: const Text('Facility Services & Items Mapping'),
+        title: Text(context.tr('Facility Services & Items Mapping')),
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
@@ -81,20 +82,20 @@ class _ServiceItemCatalogPageState extends ConsumerState<ServiceItemCatalogPage>
           ),
           unselectedLabelStyle: const TextStyle(color: Colors.white70),
           tabs: [
-            Tab(text: 'Services (${_services.length})'),
-            Tab(text: 'Items (${_items.length})'),
+            Tab(text: '${context.tr('Services')} (${_services.length})'),
+            Tab(text: '${context.tr('Items')} (${_items.length})'),
           ],
         ),
         actions: [
           IconButton(
-            tooltip: 'Sync Master Data',
+            tooltip: context.tr('Sync Master Data'),
             icon: const Icon(Icons.sync),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Master catalog synchronized with openIMIS Server.',
-                  ),
+              showAppFeedbackSheet(
+                context: context,
+                type: AppFeedbackType.success,
+                message: context.tr(
+                  'Master catalog synchronized with openIMIS Server.',
                 ),
               );
             },
@@ -109,7 +110,7 @@ class _ServiceItemCatalogPageState extends ConsumerState<ServiceItemCatalogPage>
             child: AppTextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search by code or description...',
+                hintText: context.tr('Search by code or description...'),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -154,7 +155,7 @@ class _ServiceItemCatalogPageState extends ConsumerState<ServiceItemCatalogPage>
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          'Code: ${s.code} • Category: ${s.category ?? "General"} • Standard Tariff: ${_money.format(s.price)}',
+                          '${context.tr('Code')}: ${s.code} • ${context.tr('Category')}: ${s.category ?? context.tr("General")} • ${context.tr('Standard Tariff')}: ${_money.format(s.price)}',
                           style: const TextStyle(fontSize: 12),
                         ),
                         onChanged: (enabled) {
@@ -188,7 +189,7 @@ class _ServiceItemCatalogPageState extends ConsumerState<ServiceItemCatalogPage>
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          'Code: ${item.code} • Unit: ${item.unit ?? "unit"} • Price: ${_money.format(item.price)}',
+                          '${context.tr('Code')}: ${item.code} • ${context.tr('Unit')}: ${item.unit ?? context.tr("unit")} • ${context.tr('Price')}: ${_money.format(item.price)}',
                           style: const TextStyle(fontSize: 12),
                         ),
                         onChanged: (enabled) {

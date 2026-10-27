@@ -227,10 +227,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _completePasswordLogin(LoginResponseModel response) async {
     if (!mounted) return;
-    showSnackBar(
-      context,
-      '${context.tr('Login Successful')}: ${response.userName}',
-      type: SnackBarType.success,
+    await showAppFeedbackSheet(
+      context: context,
+      message: '${context.tr('Login Successful')}: ${response.userName}',
+      type: AppFeedbackType.success,
     );
 
     final service = ref.read(biometricAuthServiceProvider);

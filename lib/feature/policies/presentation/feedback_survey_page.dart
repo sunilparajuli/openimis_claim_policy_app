@@ -1,6 +1,7 @@
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
 
@@ -74,8 +75,10 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
 
   void _submitFeedback() {
     if (_chfIdController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an Insuree CHF ID')),
+      showAppFeedbackSheet(
+        context: context,
+        type: AppFeedbackType.warning,
+        message: context.tr('Please enter an Insuree CHF ID'),
       );
       return;
     }
@@ -99,12 +102,11 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
       _tabController.animateTo(1);
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: CustomColors.SuccessGreen,
-        content: Text(
-          'Beneficiary feedback recorded and queued for openIMIS sync.',
-        ),
+    showAppFeedbackSheet(
+      context: context,
+      type: AppFeedbackType.success,
+      message: context.tr(
+        'Beneficiary feedback recorded and queued for openIMIS sync.',
       ),
     );
   }
@@ -113,16 +115,22 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppAppBar(
-        title: const Text('Beneficiary Feedback & Audit'),
+        title: Text(context.tr('Beneficiary Feedback & Audit')),
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
           indicatorWeight: 3,
-          tabs: const [
-            Tab(icon: Icon(Icons.rate_review_outlined), text: 'New Survey'),
-            Tab(icon: Icon(Icons.history), text: 'Submitted Records'),
+          tabs: [
+            Tab(
+              icon: const Icon(Icons.rate_review_outlined),
+              text: context.tr('New Survey'),
+            ),
+            Tab(
+              icon: const Icon(Icons.history),
+              text: context.tr('Submitted Records'),
+            ),
           ],
         ),
       ),
@@ -141,9 +149,9 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Audit Context',
-                          style: TextStyle(
+                        Text(
+                          context.tr('Audit Context'),
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -152,25 +160,25 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
                         AppTextField(
                           controller: _officerController,
                           readOnly: false,
-                          decoration: const InputDecoration(
-                            labelText: 'Officer Code',
-                            prefixIcon: Icon(Icons.badge),
+                          decoration: InputDecoration(
+                            labelText: context.tr('Officer Code'),
+                            prefixIcon: const Icon(Icons.badge),
                           ),
                         ),
                         const SizedBox(height: 12),
                         AppTextField(
                           controller: _chfIdController,
-                          decoration: const InputDecoration(
-                            labelText: 'Insuree CHF ID',
-                            prefixIcon: Icon(Icons.person),
+                          decoration: InputDecoration(
+                            labelText: context.tr('Insuree CHF ID'),
+                            prefixIcon: const Icon(Icons.person),
                           ),
                         ),
                         const SizedBox(height: 12),
                         AppTextField(
                           controller: _claimCodeController,
-                          decoration: const InputDecoration(
-                            labelText: 'Associated Claim Code',
-                            prefixIcon: Icon(Icons.tag),
+                          decoration: InputDecoration(
+                            labelText: context.tr('Associated Claim Code'),
+                            prefixIcon: const Icon(Icons.tag),
                           ),
                         ),
                       ],
@@ -184,9 +192,9 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Quality & Integrity Audit',
-                          style: TextStyle(
+                        Text(
+                          context.tr('Quality & Integrity Audit'),
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -220,9 +228,9 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
                         const Divider(),
 
                         const SizedBox(height: 8),
-                        const Text(
-                          'Overall Care Rating (1 to 5 Stars):',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                        Text(
+                          context.tr('Overall Care Rating (1 to 5 Stars):'),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -245,9 +253,9 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
                         AppTextField(
                           controller: _notesController,
                           maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: 'Field Notes & Observations',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: context.tr('Field Notes & Observations'),
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                       ],
@@ -259,7 +267,7 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
                   variant: AppButtonVariant.primary,
                   onPressed: _submitFeedback,
                   icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Submit Beneficiary Audit Feedback'),
+                  label: Text(context.tr('Submit Beneficiary Audit Feedback')),
                   style: AppButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: CustomColors.BrandPurple,
@@ -285,12 +293,14 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'No submitted feedback records',
+                          context.tr('No submitted feedback records'),
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Completed beneficiary surveys will appear here.',
+                          context.tr(
+                            'Completed beneficiary surveys will appear here.',
+                          ),
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
@@ -403,14 +413,14 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
             children: [
               Expanded(
                 child: RadioListTile<bool>(
-                  title: const Text('Yes'),
+                  title: Text(context.tr('Yes')),
                   value: true,
                   activeColor: CustomColors.BrandPurple,
                 ),
               ),
               Expanded(
                 child: RadioListTile<bool>(
-                  title: const Text('No'),
+                  title: Text(context.tr('No')),
                   value: false,
                   activeColor: CustomColors.BrandPurple,
                 ),

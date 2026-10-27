@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'app_button.dart';
 import 'package:flutter/material.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
 
 /// Widget to display error messages in a user-friendly way
@@ -39,7 +40,7 @@ class ErrorView extends StatelessWidget {
 
             // Error Title
             Text(
-              errorInfo.title,
+              context.tr(errorInfo.title),
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -49,7 +50,7 @@ class ErrorView extends StatelessWidget {
 
             // Error Message
             Text(
-              errorInfo.message,
+              context.tr(errorInfo.message),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(
                   context,
@@ -64,7 +65,7 @@ class ErrorView extends StatelessWidget {
               AppButton(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(context.tr('Retry')),
                 style: AppButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

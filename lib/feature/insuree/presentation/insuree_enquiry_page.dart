@@ -1,6 +1,7 @@
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/claims/presentation/claim_wizard_page.dart';
 import 'package:openimis_claim_policy_app/feature/insuree/models/insuree_model.dart';
@@ -61,7 +62,9 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppAppBar(title: const Text('Insuree Verification & Policy')),
+      appBar: AppAppBar(
+        title: Text(context.tr('Insuree Verification & Policy')),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -79,7 +82,7 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Search Insuree by CHF ID',
+                      context.tr('Search Insuree by CHF ID'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -91,8 +94,8 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
                           child: AppTextField(
                             controller: _chfIdController,
                             decoration: InputDecoration(
-                              labelText: 'CHF ID / Card Number',
-                              hintText: 'Enter CHF ID',
+                              labelText: context.tr('CHF ID / Card Number'),
+                              hintText: context.tr('Enter CHF ID'),
                               prefixIcon: const Icon(Icons.badge_outlined),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -116,7 +119,7 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
                                   child: AppLoadingIndicator(inline: true),
                                 )
                               : const Icon(Icons.search),
-                          label: const Text('Verify'),
+                          label: Text(context.tr('Verify')),
                           style: AppButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -239,7 +242,7 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Policy Status',
+                              context.tr('Policy Status'),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -295,9 +298,9 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
                             ),
                           ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'Benefit Balances & Limits',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        Text(
+                          context.tr('Benefit Balances & Limits'),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -366,7 +369,7 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
                     );
                   },
                   icon: const Icon(Icons.add_task),
-                  label: const Text('Start New Claim for this Insuree'),
+                  label: Text(context.tr('Start New Claim for this Insuree')),
                   style: AppButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: theme.colorScheme.primary,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 
 /// A searchable, typed selection field using the app's standard form styling.
 ///
@@ -68,7 +69,7 @@ class AppAutocompleteField<T extends Object> extends StatelessWidget {
               prefixIcon: prefixIcon,
               suffixIcon: onCleared != null && value.text.isNotEmpty
                   ? IconButton(
-                      tooltip: 'Clear selection',
+                      tooltip: context.tr('Clear selection'),
                       onPressed: () {
                         controller.clear();
                         onCleared?.call();

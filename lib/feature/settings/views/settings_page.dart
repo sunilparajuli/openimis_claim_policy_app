@@ -9,6 +9,7 @@ import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_
 import 'package:openimis_claim_policy_app/feature/shared/utils/ui_utils.dart';
 import 'permissions_page.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/config/claim_form_requirements_provider.dart';
 import 'package:openimis_claim_policy_app/core/auth/biometric_auth_service.dart';
 
 @RoutePage()
@@ -21,6 +22,7 @@ class SettingsPage extends ConsumerWidget {
     final isDark = themeMode == ThemeMode.dark;
     final currency = ref.watch(currencyProvider);
     final biometricEnabled = ref.watch(biometricEnabledProvider);
+    final claimRequirements = ref.watch(claimFormRequirementsProvider);
     final session = ref.watch(userSessionProvider).value;
 
     return Scaffold(
@@ -55,13 +57,11 @@ class SettingsPage extends ConsumerWidget {
                         await ref.read(currencyProvider.notifier).select(code);
                       } catch (_) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                context.tr(
-                                  'Unable to save currency. Please try again.',
-                                ),
-                              ),
+                          showAppFeedbackSheet(
+                            context: context,
+                            type: AppFeedbackType.error,
+                            message: context.tr(
+                              'Unable to save currency. Please try again.',
                             ),
                           );
                         }
@@ -100,6 +100,89 @@ class SettingsPage extends ConsumerWidget {
                       icon: const Icon(Icons.delete_outline_rounded),
                     )
                   : null,
+            ),
+          ),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ExpansionTile(
+              leading: Icon(
+                Icons.rule_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: Text(context.tr('Claim Form Requirements')),
+              subtitle: Text(
+                context.tr('Choose additional mandatory claim fields'),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    context.tr(
+                      'Core fields required by openIMIS cannot be disabled.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                _requirementSwitch(
+                  context: context,
+                  title: context.tr('Guarantee Number'),
+                  icon: Icons.security_outlined,
+                  value: claimRequirements.value?.guaranteeNumber ?? false,
+                  enabled: !claimRequirements.isLoading,
+                  onChanged: (value) => ref
+                      .read(claimFormRequirementsProvider.notifier)
+                      .save(
+                        (claimRequirements.value ??
+                                const ClaimFormRequirements())
+                            .copyWith(guaranteeNumber: value),
+                      ),
+                ),
+                _requirementSwitch(
+                  context: context,
+                  title: context.tr('Secondary Diagnosis'),
+                  icon: Icons.medical_information_outlined,
+                  value: claimRequirements.value?.secondaryDiagnosis ?? false,
+                  enabled: !claimRequirements.isLoading,
+                  onChanged: (value) => ref
+                      .read(claimFormRequirementsProvider.notifier)
+                      .save(
+                        (claimRequirements.value ??
+                                const ClaimFormRequirements())
+                            .copyWith(secondaryDiagnosis: value),
+                      ),
+                ),
+                _requirementSwitch(
+                  context: context,
+                  title: context.tr('Medical Service'),
+                  icon: Icons.medical_services_outlined,
+                  value: claimRequirements.value?.medicalService ?? false,
+                  enabled: !claimRequirements.isLoading,
+                  onChanged: (value) => ref
+                      .read(claimFormRequirementsProvider.notifier)
+                      .save(
+                        (claimRequirements.value ??
+                                const ClaimFormRequirements())
+                            .copyWith(medicalService: value),
+                      ),
+                ),
+                _requirementSwitch(
+                  context: context,
+                  title: context.tr('Medical Item'),
+                  icon: Icons.medication_outlined,
+                  value: claimRequirements.value?.medicalItem ?? false,
+                  enabled: !claimRequirements.isLoading,
+                  onChanged: (value) => ref
+                      .read(claimFormRequirementsProvider.notifier)
+                      .save(
+                        (claimRequirements.value ??
+                                const ClaimFormRequirements())
+                            .copyWith(medicalItem: value),
+                      ),
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
           ),
           AppSectionHeader(title: context.tr('Security')),
@@ -310,6 +393,21 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _requirementSwitch({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required bool value,
+    required bool enabled,
+    required ValueChanged<bool> onChanged,
+  }) => SwitchListTile(
+    value: value,
+    onChanged: enabled ? onChanged : null,
+    title: Text(title),
+    subtitle: Text(context.tr(value ? 'Mandatory' : 'Optional')),
+    secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
+  );
 
   void _showLogoutSheet(BuildContext context, WidgetRef ref) {
     showAppBottomSheet(

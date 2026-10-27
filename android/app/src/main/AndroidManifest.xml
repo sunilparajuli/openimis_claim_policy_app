@@ -19,7 +19,7 @@
         android:icon="@mipmap/ic_launcher">
         <activity
             android:label="@string/app_name"
-            android:name=".MainActivity"
+            android:name="org.openimis.claimpolicy.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/LaunchTheme"

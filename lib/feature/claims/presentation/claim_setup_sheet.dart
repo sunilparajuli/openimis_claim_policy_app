@@ -5,7 +5,14 @@ import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_setu
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 
 class ClaimSetupSheet extends ConsumerStatefulWidget {
-  const ClaimSetupSheet({super.key});
+  const ClaimSetupSheet({
+    super.key,
+    this.initialCode,
+    this.synchronizeOnOpen = false,
+  });
+
+  final String? initialCode;
+  final bool synchronizeOnOpen;
 
   @override
   ConsumerState<ClaimSetupSheet> createState() => _ClaimSetupSheetState();
@@ -21,7 +28,10 @@ class _ClaimSetupSheetState extends ConsumerState<ClaimSetupSheet> {
   @override
   void initState() {
     super.initState();
-    _codeController = TextEditingController();
+    _codeController = TextEditingController(text: widget.initialCode ?? '');
+    if (widget.synchronizeOnOpen && _codeController.text.trim().isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _continue());
+    }
   }
 
   @override

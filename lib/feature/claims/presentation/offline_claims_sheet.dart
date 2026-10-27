@@ -1,6 +1,7 @@
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/claims/data/offline/claim_sqlite_database.dart';
 import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_repository.dart';
@@ -56,13 +57,11 @@ class _OfflineClaimsSheetState extends ConsumerState<OfflineClaimsSheet> {
 
     if (mounted) {
       setState(() => _isSyncing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: CustomColors.SuccessGreen,
-          content: Text(
+      showAppFeedbackSheet(
+        context: context,
+        type: AppFeedbackType.success,
+        message:
             'Sync Complete: ${result.syncedCount} claims uploaded to FHIR server.',
-          ),
-        ),
       );
     }
   }
@@ -90,7 +89,7 @@ class _OfflineClaimsSheetState extends ConsumerState<OfflineClaimsSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Pending Claims',
+                      context.tr('Pending Claims'),
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -144,14 +143,16 @@ class _OfflineClaimsSheetState extends ConsumerState<OfflineClaimsSheet> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No claim found.',
+                              context.tr('No claim found.'),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'There are no pending claims to upload.',
+                              context.tr(
+                                'There are no pending claims to upload.',
+                              ),
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: Colors.grey.shade600,

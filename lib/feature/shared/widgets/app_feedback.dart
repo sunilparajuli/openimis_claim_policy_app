@@ -1,4 +1,78 @@
 import 'package:flutter/material.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+
+import 'app_bottom_sheet.dart';
+import 'app_button.dart';
+
+enum AppFeedbackType { success, error, warning, info }
+
+/// Displays consistent result feedback in the app's modal bottom-sheet style.
+Future<void> showAppFeedbackSheet({
+  required BuildContext context,
+  required String message,
+  AppFeedbackType type = AppFeedbackType.info,
+  String? title,
+  String? actionLabel,
+  VoidCallback? onAction,
+  bool isDismissible = true,
+}) async {
+  final configuration = switch (type) {
+    AppFeedbackType.success => (
+      icon: Icons.check_circle_rounded,
+      color: const Color(0xFF2E7D32),
+      title: context.tr('Success'),
+    ),
+    AppFeedbackType.error => (
+      icon: Icons.error_rounded,
+      color: Theme.of(context).colorScheme.error,
+      title: context.tr('Error'),
+    ),
+    AppFeedbackType.warning => (
+      icon: Icons.warning_amber_rounded,
+      color: const Color(0xFFED6C02),
+      title: context.tr('Warning'),
+    ),
+    AppFeedbackType.info => (
+      icon: Icons.info_rounded,
+      color: Theme.of(context).colorScheme.primary,
+      title: context.tr('Information'),
+    ),
+  };
+
+  await showAppBottomSheet<void>(
+    context: context,
+    isDismissible: isDismissible,
+    enableDrag: isDismissible,
+    builder: (sheetContext) => AppSheetContent(
+      icon: Container(
+        width: 72,
+        height: 72,
+        decoration: BoxDecoration(
+          color: configuration.color.withValues(alpha: 0.12),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(configuration.icon, color: configuration.color, size: 42),
+      ),
+      title: Text(title ?? configuration.title),
+      content: Text(message),
+      actions: [
+        if (actionLabel != null && onAction != null)
+          AppButton(
+            variant: AppButtonVariant.secondary,
+            onPressed: () {
+              Navigator.pop(sheetContext);
+              onAction();
+            },
+            label: Text(actionLabel),
+          ),
+        AppButton(
+          onPressed: () => Navigator.pop(sheetContext),
+          label: Text(context.tr('OK')),
+        ),
+      ],
+    ),
+  );
+}
 
 class AppLoadingIndicator extends StatelessWidget {
   const AppLoadingIndicator({

@@ -105,8 +105,44 @@ class ClaimSubmission {
 
   /// Formats the submission according to openIMIS FHIR R4 Claim specifications
   Map<String, dynamic> toFhirJson() {
+    Map<String, dynamic> reference(String type, String code) => {
+      'type': type,
+      'identifier': {
+        'type': {
+          'coding': [
+            {
+              'system':
+                  'https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/openimis-identifiers',
+              'code': 'Code',
+            },
+          ],
+        },
+        'value': code,
+      },
+    };
+
+    Map<String, dynamic> provision({
+      required int sequence,
+      required String category,
+      required String resourceType,
+      required String code,
+      required num quantity,
+      required num price,
+    }) => {
+      'sequence': sequence,
+      'category': {'text': category},
+      'extension': [
+        {'url': resourceType, 'valueReference': reference(resourceType, code)},
+      ],
+      'productOrService': {'text': code},
+      'quantity': {'value': quantity},
+      'unitPrice': {'currency': r'$', 'value': price},
+    };
+
     return {
       'resourceType': 'Claim',
+      'status': 'active',
+      'use': 'claim',
       'identifier': [
         {
           'type': {
@@ -136,8 +172,13 @@ class ClaimSubmission {
           },
         ],
       },
-      'patient': {
-        'identifier': {'value': insureeChfId},
+      'patient': {...reference('Patient', insureeChfId)},
+      'provider': reference('Organization', healthFacility),
+      'enterer': reference('Practitioner', claimAdmin),
+      'priority': {
+        'coding': [
+          {'code': 'normal'},
+        ],
       },
       'diagnosis': [
         {
@@ -145,9 +186,9 @@ class ClaimSubmission {
           'diagnosisCodeableConcept': {
             'coding': [
               {
-                'system': 'http://hl7.org/fhir/sid/icd-10',
+                'system':
+                    'https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/diagnosis-ICD10-level1',
                 'code': primaryDiagnosis.code,
-                'display': primaryDiagnosis.name,
               },
             ],
           },
@@ -158,9 +199,9 @@ class ClaimSubmission {
             'diagnosisCodeableConcept': {
               'coding': [
                 {
-                  'system': 'http://hl7.org/fhir/sid/icd-10',
+                  'system':
+                      'https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/diagnosis-ICD10-level1',
                   'code': entry.value.code,
-                  'display': entry.value.name,
                 },
               ],
             },
@@ -168,42 +209,36 @@ class ClaimSubmission {
         ),
       ],
       'item': [
-        ...services.asMap().entries.map(
-          (entry) => {
-            'sequence': entry.key + 1,
-            'category': {'text': 'Service'},
-            'productOrService': {
-              'coding': [
-                {
-                  'code': entry.value.service.code,
-                  'display': entry.value.service.name,
-                },
-              ],
-            },
-            'quantity': {'value': entry.value.quantity},
-            'unitPrice': {'value': entry.value.price},
-            'net': {'value': entry.value.total},
-          },
-        ),
         ...items.asMap().entries.map(
-          (entry) => {
-            'sequence': services.length + entry.key + 1,
-            'category': {'text': 'Item'},
-            'productOrService': {
-              'coding': [
-                {
-                  'code': entry.value.item.code,
-                  'display': entry.value.item.name,
-                },
-              ],
-            },
-            'quantity': {'value': entry.value.quantity},
-            'unitPrice': {'value': entry.value.price},
-            'net': {'value': entry.value.total},
-          },
+          (entry) => provision(
+            sequence: entry.key + 1,
+            category: 'item',
+            resourceType: 'Medication',
+            code: entry.value.item.code,
+            quantity: entry.value.quantity,
+            price: entry.value.price,
+          ),
+        ),
+        ...services.asMap().entries.map(
+          (entry) => provision(
+            sequence: items.length + entry.key + 1,
+            category: 'service',
+            resourceType: 'ActivityDefinition',
+            code: entry.value.service.code,
+            quantity: entry.value.quantity,
+            price: entry.value.price,
+          ),
         ),
       ],
-      'total': {'value': grandTotal},
+      if (guaranteeNo?.isNotEmpty == true)
+        'insurance': [
+          {
+            'sequence': 1,
+            'focal': true,
+            'coverage': reference('Coverage', guaranteeNo!),
+          },
+        ],
+      'total': {'currency': r'$', 'value': grandTotal},
     };
   }
 }

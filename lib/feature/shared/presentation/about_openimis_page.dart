@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import '../widgets/app_widgets.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 
@@ -8,7 +9,7 @@ class AboutOpenImisPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppAppBar(title: const Text('About openIMIS')),
+      appBar: AppAppBar(title: Text(context.tr('About openIMIS'))),
       body: ListView(
         padding: const EdgeInsets.all(24.0),
         children: [
@@ -32,18 +33,18 @@ class AboutOpenImisPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'openIMIS Mobile Suite',
-                  style: TextStyle(
+                Text(
+                  context.tr('openIMIS Mobile Suite'),
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: CustomColors.BrandPurple,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Unified Claims & Policies Management',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                Text(
+                  context.tr('Unified Claims & Policies Management'),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),
@@ -73,13 +74,15 @@ class AboutOpenImisPage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          const Text(
-            'About the Platform',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          Text(
+            context.tr('About the Platform'),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
-            'openIMIS is an open-source insurance management information system that seamlessly integrates beneficiary enrollment, policy renewal, claim adjudication, and quality auditing into a unified digital ecosystem.\n\nOriginally developed with the support of the Swiss Agency for Development and Cooperation (SDC) and Deutsche Gesellschaft für Internationale Zusammenarbeit (GIZ), openIMIS empowers universal health coverage initiatives worldwide.',
+            context.tr(
+              'openIMIS is an open-source insurance management information system that seamlessly integrates beneficiary enrollment, policy renewal, claim adjudication, and quality auditing into a unified digital ecosystem.\n\nOriginally developed with the support of the Swiss Agency for Development and Cooperation (SDC) and Deutsche Gesellschaft für Internationale Zusammenarbeit (GIZ), openIMIS empowers universal health coverage initiatives worldwide.',
+            ),
             style: TextStyle(
               fontSize: 13,
               height: 1.5,
