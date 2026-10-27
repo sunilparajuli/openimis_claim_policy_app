@@ -78,19 +78,23 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check 3 status tabs matching ClaimListingActivity.java
-      expect(find.text('ENTERED'), findsOneWidget);
-      expect(find.text('ACCEPTED'), findsOneWidget);
-      expect(find.text('REJECTED'), findsOneWidget);
+      Finder statusTab(String label) =>
+          find.descendant(of: find.byType(TabBar), matching: find.text(label));
+      expect(statusTab('ENTERED / PENDING'), findsOneWidget);
+      expect(statusTab('ACCEPTED'), findsOneWidget);
+      expect(statusTab('REJECTED'), findsOneWidget);
 
       expect(find.text('CLM-78401'), findsOneWidget);
 
       // Switch to Accepted tab
-      await tester.tap(find.text('ACCEPTED'));
+      await tester.tap(statusTab('ACCEPTED'));
       await tester.pumpAndSettle();
       expect(find.text('CLM-78390'), findsOneWidget);
 
       // Switch to Rejected tab
-      await tester.tap(find.text('REJECTED'));
+      final rejectedTab = statusTab('REJECTED');
+      await tester.ensureVisible(rejectedTab);
+      await tester.tap(rejectedTab);
       await tester.pumpAndSettle();
       expect(find.text('CLM-78350'), findsOneWidget);
     });
