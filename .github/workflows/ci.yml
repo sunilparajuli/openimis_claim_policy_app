@@ -43,16 +43,20 @@ jobs:
       - name: Create CI environment files
         env:
           API_BASE_URL: ${{ vars.API_BASE_URL }}
+          DATA_MODE: ${{ vars.DATA_MODE }}
+          API_KEY: ${{ secrets.API_KEY }}
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
         run: |
           api_url="${API_BASE_URL:-https://demo.openimis.org/}"
+          api_key="${API_KEY:-}"
+          data_mode="${DATA_MODE:-live}"
           maps_key="${GOOGLE_MAPS_API_KEY:-ci-placeholder}"
           for flavor in dev prod; do
-            printf '%s\\n' \\
-              "API_BASE_URL=$api_url" \\
-              'API_KEY=' \\
-              "ENVIRONMENT=$flavor" \\
-              'DATA_MODE=live' \\
+            printf '%s\n' \
+              "API_BASE_URL=$api_url" \
+              "API_KEY=$api_key" \
+              "ENVIRONMENT=$flavor" \
+              "DATA_MODE=$data_mode" \
               "GOOGLE_MAPS_API_KEY=$maps_key" > ".env.$flavor"
           done
 

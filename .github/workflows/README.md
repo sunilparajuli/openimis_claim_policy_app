@@ -14,9 +14,10 @@ Download the APK and coverage from the workflow run's **Artifacts** section.
 
 ## Configuration
 
-Set the optional repository variable `API_BASE_URL` and secret
-`GOOGLE_MAPS_API_KEY`. Without them, CI uses the openIMIS demo API and a placeholder
-Maps key. Both `.env` files are generated only inside the runner.
+Set the optional repository variables `API_BASE_URL` and `DATA_MODE`, and secrets
+`API_KEY` and `GOOGLE_MAPS_API_KEY`. Without them, CI uses the openIMIS demo API,
+live data mode, an empty API key, and a placeholder Maps key. Both `.env` files
+are generated only inside the runner.
 Never commit your real environment files or generated environment credentials.
 
 Commit all application source, new components, tests and `assets/` before pushing;
