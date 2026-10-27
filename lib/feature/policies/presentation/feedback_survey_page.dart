@@ -75,7 +75,7 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
 
   void _submitFeedback() {
     if (_chfIdController.text.trim().isEmpty) {
-      showAppFeedbackSheet(
+      showAppFeedbackDialog(
         context: context,
         type: AppFeedbackType.warning,
         message: context.tr('Please enter an Insuree CHF ID'),
@@ -102,7 +102,7 @@ class _FeedbackSurveyPageState extends ConsumerState<FeedbackSurveyPage>
       _tabController.animateTo(1);
     });
 
-    showAppFeedbackSheet(
+    showAppFeedbackDialog(
       context: context,
       type: AppFeedbackType.success,
       message: context.tr(

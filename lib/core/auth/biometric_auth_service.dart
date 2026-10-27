@@ -18,6 +18,14 @@ class BiometricAuthService {
     }
   }
 
+  Future<bool> isSupported() async {
+    try {
+      return await _localAuth.isDeviceSupported();
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> authenticate() async {
     try {
       return await _localAuth.authenticate(
@@ -39,6 +47,12 @@ class BiometricAuthService {
 
 final biometricAuthServiceProvider = Provider<BiometricAuthService>((ref) {
   return BiometricAuthService(ref.read(secureStorageServiceProvider));
+});
+
+/// Whether the device supports biometric authentication. Enrollment and app
+/// enablement are checked separately when authentication is requested.
+final biometricAvailableProvider = FutureProvider<bool>((ref) {
+  return ref.read(biometricAuthServiceProvider).isSupported();
 });
 
 final biometricEnabledProvider =

@@ -99,6 +99,8 @@ const frenchUiTranslations = <String, String>{
       'L’authentification biométrique a été annulée ou n’a pas pu être vérifiée.',
   'No saved session is available. Sign in with your username and password first.':
       'Aucune session enregistrée n’est disponible. Connectez-vous d’abord avec votre nom d’utilisateur et votre mot de passe.',
+  'Sign in with your username and password first, then enable biometric login.':
+      'Connectez-vous d’abord avec votre nom d’utilisateur et votre mot de passe, puis activez la connexion biométrique.',
   'Biometrics are unavailable or authentication was cancelled.':
       'La biométrie est indisponible ou l’authentification a été annulée.',
   'Logout': 'Déconnexion',

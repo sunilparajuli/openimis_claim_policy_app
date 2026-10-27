@@ -120,7 +120,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
     }
 
     if (message == null) return true;
-    showAppFeedbackSheet(
+    showAppFeedbackDialog(
       context: context,
       type: AppFeedbackType.warning,
       message: context.tr(message),
@@ -189,7 +189,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       final message = error is ApiError
           ? error.userMessage
           : error.toString().replaceFirst('FormatException: ', '');
-      showAppFeedbackSheet(
+      showAppFeedbackDialog(
         context: context,
         type: AppFeedbackType.error,
         message: message,

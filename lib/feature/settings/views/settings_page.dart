@@ -57,7 +57,7 @@ class SettingsPage extends ConsumerWidget {
                         await ref.read(currencyProvider.notifier).select(code);
                       } catch (_) {
                         if (context.mounted) {
-                          showAppFeedbackSheet(
+                          showAppFeedbackDialog(
                             context: context,
                             type: AppFeedbackType.error,
                             message: context.tr(
@@ -483,8 +483,15 @@ class SettingsPage extends ConsumerWidget {
           AppButton(
             onPressed: () async {
               Navigator.pop(sheetContext);
-              await ref.read(userSessionProvider.notifier).logout();
-              ref.read(biometricEnabledProvider.notifier).reset();
+              final preserveForBiometrics = await ref.read(
+                biometricEnabledProvider.future,
+              );
+              await ref
+                  .read(userSessionProvider.notifier)
+                  .logout(preserveForBiometrics: preserveForBiometrics);
+              if (!preserveForBiometrics) {
+                ref.read(biometricEnabledProvider.notifier).reset();
+              }
               if (context.mounted) {
                 context.router.replaceAll([LoginRoute(title: 'Login')]);
               }

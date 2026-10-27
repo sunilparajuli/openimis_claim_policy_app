@@ -91,7 +91,7 @@ class _ServiceItemCatalogPageState extends ConsumerState<ServiceItemCatalogPage>
             tooltip: context.tr('Sync Master Data'),
             icon: const Icon(Icons.sync),
             onPressed: () {
-              showAppFeedbackSheet(
+              showAppFeedbackDialog(
                 context: context,
                 type: AppFeedbackType.success,
                 message: context.tr(

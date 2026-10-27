@@ -194,7 +194,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                 );
                 setState(() => _families.insert(0, newFamily));
                 Navigator.pop(ctx);
-                showAppFeedbackSheet(
+                showAppFeedbackDialog(
                   context: context,
                   type: AppFeedbackType.success,
                   message:
@@ -324,7 +324,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                     relationship == null ||
                     gender == null ||
                     dateOfBirth == null) {
-                  showAppFeedbackSheet(
+                  showAppFeedbackDialog(
                     context: sheetContext,
                     type: AppFeedbackType.warning,
                     message: context.tr('Complete all family member fields.'),
@@ -475,7 +475,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                               if (member == null || !mounted) return;
                               setState(() => family.members.add(member));
                               setSheetState(() {});
-                              showAppFeedbackSheet(
+                              showAppFeedbackDialog(
                                 context: this.context,
                                 type: AppFeedbackType.success,
                                 message:

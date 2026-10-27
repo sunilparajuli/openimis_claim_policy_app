@@ -57,7 +57,7 @@ class _OfflineClaimsSheetState extends ConsumerState<OfflineClaimsSheet> {
 
     if (mounted) {
       setState(() => _isSyncing = false);
-      showAppFeedbackSheet(
+      showAppFeedbackDialog(
         context: context,
         type: AppFeedbackType.success,
         message:

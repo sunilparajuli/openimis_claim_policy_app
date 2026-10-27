@@ -22,7 +22,7 @@ import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dar
 | `AppSheetContent` | Scrollable sheet title, close button, content and actions |
 | `AppLoadingIndicator` | Centered or inline progress spinner |
 | `AppErrorMessage` | Inline error with live-region accessibility |
-| `showAppFeedbackSheet` | Success, error, warning or information result modal |
+| `showAppFeedbackDialog` | Centered success, error, warning or information modal |
 | `AppEmptyState` | Empty message, icon and optional action |
 | `AppStatusBadge` | Consistent neutral/info/success/warning/error status chip |
 | `AppSectionHeader` | Accessible section title with optional subtitle/actions |
@@ -198,7 +198,7 @@ Use a feedback sheet after an operation succeeds or fails. It provides the
 standard icon, color, title, responsive width and acknowledgement button:
 
 ```dart
-await showAppFeedbackSheet(
+await showAppFeedbackDialog(
   context: context,
   type: AppFeedbackType.success,
   message: context.tr('Changes saved successfully'),
@@ -208,7 +208,7 @@ await showAppFeedbackSheet(
 An error can offer a recovery action without building a custom sheet:
 
 ```dart
-showAppFeedbackSheet(
+showAppFeedbackDialog(
   context: context,
   type: AppFeedbackType.error,
   message: errorMessage,
@@ -220,7 +220,7 @@ showAppFeedbackSheet(
 Available types are `success`, `error`, `warning`, and `info`. Use
 `AppErrorMessage` for errors that must remain visible inside a form. Existing
 `showSnackBar(...)` calls are compatibility wrappers and now display this same
-feedback sheet; new code should call `showAppFeedbackSheet` directly.
+feedback dialog; new code should call `showAppFeedbackDialog` directly.
 
 ```dart
 const AppLoadingIndicator()

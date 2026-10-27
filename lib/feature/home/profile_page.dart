@@ -2,6 +2,7 @@ import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dar
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openimis_claim_policy_app/core/auth/biometric_auth_service.dart';
 import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:openimis_claim_policy_app/feature/shared/app_flavour/app_config.dart';
 import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
@@ -392,7 +393,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       await launchUrl(uri);
     } else {
       if (mounted) {
-        showAppFeedbackSheet(
+        showAppFeedbackDialog(
           context: context,
           type: AppFeedbackType.error,
           message: context.tr('Could not launch phone app'),
@@ -407,7 +408,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        showAppFeedbackSheet(
+        showAppFeedbackDialog(
           context: context,
           type: AppFeedbackType.error,
           message: context.tr('Could not launch WhatsApp'),
@@ -426,7 +427,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       await launchUrl(uri);
     } else {
       if (mounted) {
-        showAppFeedbackSheet(
+        showAppFeedbackDialog(
           context: context,
           type: AppFeedbackType.error,
           message: context.tr('Could not launch email app'),
@@ -464,16 +465,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  void _handleLogout(BuildContext context) {
+  Future<void> _handleLogout(BuildContext context) async {
     // TODO: Clear user session/token
     // TODO: Clear local storage/preferences
     // TODO: Clear any cached data
 
     // Clear the current user session.
-    ref.read(userSessionProvider.notifier).logout();
+    final preserveForBiometrics = await ref.read(
+      biometricEnabledProvider.future,
+    );
+    await ref
+        .read(userSessionProvider.notifier)
+        .logout(preserveForBiometrics: preserveForBiometrics);
 
     // Navigate to login and clear all previous routes
-    context.router.replaceAll([LoginRoute(title: 'Login')]);
+    if (context.mounted) {
+      context.router.replaceAll([LoginRoute(title: 'Login')]);
+    }
   }
 
   Widget _buildNotificationCard(BuildContext context) {

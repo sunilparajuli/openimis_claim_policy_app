@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 
-import 'app_bottom_sheet.dart';
 import 'app_button.dart';
 
 enum AppFeedbackType { success, error, warning, info }
 
-/// Displays consistent result feedback in the app's modal bottom-sheet style.
-Future<void> showAppFeedbackSheet({
+/// Displays consistent result feedback in a centered, responsive modal.
+Future<void> showAppFeedbackDialog({
   required BuildContext context,
   required String message,
   AppFeedbackType type = AppFeedbackType.info,
@@ -39,40 +38,98 @@ Future<void> showAppFeedbackSheet({
     ),
   };
 
-  await showAppBottomSheet<void>(
+  await showDialog<void>(
     context: context,
-    isDismissible: isDismissible,
-    enableDrag: isDismissible,
-    builder: (sheetContext) => AppSheetContent(
-      icon: Container(
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          color: configuration.color.withValues(alpha: 0.12),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(configuration.icon, color: configuration.color, size: 42),
-      ),
-      title: Text(title ?? configuration.title),
-      content: Text(message),
-      actions: [
-        if (actionLabel != null && onAction != null)
-          AppButton(
-            variant: AppButtonVariant.secondary,
-            onPressed: () {
-              Navigator.pop(sheetContext);
-              onAction();
-            },
-            label: Text(actionLabel),
+    useRootNavigator: true,
+    barrierDismissible: isDismissible,
+    builder: (dialogContext) => Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: configuration.color.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  configuration.icon,
+                  color: configuration.color,
+                  size: 42,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                title ?? configuration.title,
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  dialogContext,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(dialogContext).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  if (actionLabel != null && onAction != null)
+                    AppButton(
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        onAction();
+                      },
+                      label: Text(actionLabel),
+                    ),
+                  AppButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    label: Text(context.tr('OK')),
+                  ),
+                ],
+              ),
+            ],
           ),
-        AppButton(
-          onPressed: () => Navigator.pop(sheetContext),
-          label: Text(context.tr('OK')),
         ),
-      ],
+      ),
     ),
   );
 }
+
+/// Compatibility alias for screens migrated from the former bottom sheet.
+@Deprecated('Use showAppFeedbackDialog instead.')
+Future<void> showAppFeedbackSheet({
+  required BuildContext context,
+  required String message,
+  AppFeedbackType type = AppFeedbackType.info,
+  String? title,
+  String? actionLabel,
+  VoidCallback? onAction,
+  bool isDismissible = true,
+}) => showAppFeedbackDialog(
+  context: context,
+  message: message,
+  type: type,
+  title: title,
+  actionLabel: actionLabel,
+  onAction: onAction,
+  isDismissible: isDismissible,
+);
 
 class AppLoadingIndicator extends StatelessWidget {
   const AppLoadingIndicator({

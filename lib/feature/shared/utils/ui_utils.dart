@@ -8,7 +8,7 @@ Future<void> showSnackBar(
   String message, {
   SnackBarType type = SnackBarType.info,
 }) {
-  return showAppFeedbackSheet(
+  return showAppFeedbackDialog(
     context: context,
     message: message,
     type: switch (type) {

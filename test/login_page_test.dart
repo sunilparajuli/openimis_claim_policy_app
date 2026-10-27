@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openimis_claim_policy_app/core/auth/biometric_auth_service.dart';
 import 'package:openimis_claim_policy_app/feature/login/views/login_page.dart';
 
 void main() {
@@ -28,12 +29,31 @@ void main() {
 
       // Verify buttons exist
       expect(find.text('Login'), findsOneWidget);
+      expect(find.byType(Dialog), findsNothing);
       expect(
         find.text(
           'Claim Administrator setup is requested only when you open a Claims feature.',
         ),
         findsOneWidget,
       );
+    });
+
+    testWidgets('hides fingerprint action until biometric login is enabled', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            biometricAvailableProvider.overrideWith((ref) async => true),
+          ],
+          child: const MaterialApp(home: LoginPage(title: 'Login Test')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.fingerprint_rounded), findsNothing);
+      expect(find.text('Use biometrics'), findsNothing);
+      expect(find.byType(Dialog), findsNothing);
     });
 
     testWidgets('Username and password fields accept input', (

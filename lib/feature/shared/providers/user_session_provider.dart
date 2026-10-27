@@ -171,9 +171,33 @@ class UserSessionNotifier extends _$UserSessionNotifier {
   }
 
   /// Logout and clear secure storage
-  Future<void> logout() async {
-    await _storage.clearAll();
+  Future<void> logout({bool preserveForBiometrics = false}) async {
+    if (!preserveForBiometrics) await _storage.clearAll();
     state = const AsyncData(null);
+  }
+
+  Future<bool> hasSavedSession() => _storage.isLoggedIn();
+
+  /// Restores the securely stored session only after biometric verification.
+  Future<UserSession?> restoreSavedSession() async {
+    if (!await _storage.isLoggedIn()) return null;
+    final username = await _storage.getUsername();
+    final token = await _storage.getAuthToken();
+    if (username == null || token == null || token.isEmpty) return null;
+    final session = UserSession(
+      username: username,
+      email: await _storage.getEmail(),
+      isGuest: false,
+      loginMethod: 'biometric',
+      token: token,
+      claimAdminCode: await _storage.getClaimAdminCode(),
+      claimAdminName: await _storage.getClaimAdminName(),
+      healthFacilityCode: await _storage.getHealthFacilityCode(),
+      healthFacilityName: await _storage.getHealthFacilityName(),
+      enrolmentOfficerCode: await _storage.getEnrolmentOfficerCode(),
+    );
+    state = AsyncData(session);
+    return session;
   }
 
   /// Update user profile

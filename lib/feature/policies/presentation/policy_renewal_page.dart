@@ -88,7 +88,7 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _isRenewing = false);
-      showAppFeedbackSheet(
+      showAppFeedbackDialog(
         context: context,
         type: AppFeedbackType.error,
         message: 'Policy renewal failed: $error',

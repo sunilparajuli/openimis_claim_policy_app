@@ -31,12 +31,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool _authenticatingBiometric = false;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _tryBiometricLogin());
-  }
-
-  @override
   void dispose() {
     _userNameController.dispose();
     _passwordController.dispose();
@@ -67,8 +61,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
 
     final loginState = ref.watch(loginProvider);
+    final biometricAvailable = ref.watch(biometricAvailableProvider);
     final biometricEnabled = ref.watch(biometricEnabledProvider);
-    final savedSession = ref.watch(userSessionProvider);
     final loading = loginState.isLoading;
     final colors = Theme.of(context).colorScheme;
 
@@ -177,17 +171,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           loadingLabel: context.tr('In Progress…'),
                           label: Text(context.tr('Login')),
                         ),
-                        if (biometricEnabled.value == true &&
-                            savedSession.value?.isAuthenticated == true) ...[
+                        if (biometricAvailable.value == true &&
+                            biometricEnabled.value == true) ...[
                           const SizedBox(height: 12),
                           AppButton(
                             expanded: true,
                             variant: AppButtonVariant.secondary,
                             onPressed: _authenticatingBiometric
                                 ? null
-                                : _tryBiometricLogin,
+                                : () => _tryBiometricLogin(),
                             isLoading: _authenticatingBiometric,
                             loadingLabel: context.tr('Authenticating…'),
+                            icon: const Icon(Icons.fingerprint_rounded),
                             label: Text(context.tr('Use biometrics')),
                           ),
                         ],
@@ -227,18 +222,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _completePasswordLogin(LoginResponseModel response) async {
     if (!mounted) return;
-    await showAppFeedbackSheet(
+    await showAppFeedbackDialog(
       context: context,
       message: '${context.tr('Login Successful')}: ${response.userName}',
       type: AppFeedbackType.success,
     );
 
     final service = ref.read(biometricAuthServiceProvider);
-    final alreadyOffered = await service.wasSetupOffered();
+    final alreadyEnabled = await service.isEnabled();
     final available = await service.isAvailable();
     if (!mounted) return;
 
-    if (!alreadyOffered && available) {
+    if (!alreadyEnabled && available) {
       await service.markSetupOffered();
       if (!mounted) return;
       final enable = await showAppBottomSheet<bool>(
@@ -274,10 +269,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             .read(biometricEnabledProvider.notifier)
             .enable();
         if (!enabled && mounted) {
-          showSnackBar(
-            context,
-            context.tr('Biometric authentication was not enabled.'),
-            type: SnackBarType.error,
+          await showAppFeedbackDialog(
+            context: context,
+            type: AppFeedbackType.error,
+            message: context.tr('Biometric authentication was not enabled.'),
           );
         }
       }
@@ -288,30 +283,33 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _tryBiometricLogin() async {
     if (_authenticatingBiometric) return;
     final enabled = await ref.read(biometricEnabledProvider.future);
-    final session = await ref.read(userSessionProvider.future);
+    final sessionNotifier = ref.read(userSessionProvider.notifier);
+    final hasSavedSession = await sessionNotifier.hasSavedSession();
     if (!mounted) return;
-    if (!enabled || session?.isAuthenticated != true) {
-      showSnackBar(
-        context,
-        context.tr(
-          'No saved session is available. Sign in with your username and password first.',
+    if (!enabled || !hasSavedSession) {
+      showAppFeedbackDialog(
+        context: context,
+        type: AppFeedbackType.info,
+        message: context.tr(
+          'Sign in with your username and password first, then enable biometric login.',
         ),
-        type: SnackBarType.error,
       );
       return;
     }
 
     setState(() => _authenticatingBiometric = true);
-    if (session?.username != null) {
-      _userNameController.text = session!.username!;
-    }
     final authenticated = await ref
         .read(biometricAuthServiceProvider)
         .authenticate();
     if (!mounted) return;
     setState(() => _authenticatingBiometric = false);
     if (authenticated) {
-      context.router.replaceAll([const HomeWithTabsRoute()]);
+      final restored = await sessionNotifier.restoreSavedSession();
+      if (!mounted) return;
+      if (restored?.isAuthenticated == true) {
+        _userNameController.text = restored!.username ?? '';
+        context.router.replaceAll([const HomeWithTabsRoute()]);
+      }
     } else {
       showSnackBar(
         context,
