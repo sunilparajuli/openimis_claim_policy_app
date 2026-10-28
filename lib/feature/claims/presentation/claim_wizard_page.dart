@@ -466,14 +466,19 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         const SizedBox(height: 12),
         AppTextField(
           controller: _healthFacilityController,
+          readOnly: true,
           decoration: InputDecoration(
             labelText: '${context.tr('Health Facility Code')} *',
             prefixIcon: const Icon(Icons.local_hospital),
+            helperText: context.tr(
+              'Services and items are filtered for this health facility',
+            ),
           ),
         ),
         const SizedBox(height: 12),
         AppTextField(
           controller: _claimAdminController,
+          readOnly: true,
           decoration: InputDecoration(
             labelText: '${context.tr('Claim Admin')} *',
             prefixIcon: const Icon(Icons.person),

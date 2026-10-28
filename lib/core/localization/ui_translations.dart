@@ -58,6 +58,8 @@ const frenchUiTranslations = <String, String>{
   'Guarantee Number': 'Numéro de garantie',
   'Secondary Diagnosis': 'Diagnostic secondaire',
   'Medical Service': 'Prestation médicale',
+  'Services and items are filtered for this health facility':
+      'Les prestations et articles sont filtrés pour cet établissement de santé',
   'Medical Item': 'Article médical',
   'Please enter Insurance Number': 'Veuillez saisir le numéro d’assurance',
   'Please enter Claim Code': 'Veuillez saisir le code de prestation',

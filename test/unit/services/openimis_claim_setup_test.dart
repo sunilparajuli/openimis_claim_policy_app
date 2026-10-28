@@ -40,10 +40,15 @@ void main() {
 
     expect(result.administrator.code, 'RHOS0011');
     expect(result.administrator.healthFacilityCode, 'RAHOS001');
+    expect(result.administrator.healthFacilityName, 'Rapta District Hospital');
     expect(result.diagnoses, isNotEmpty);
     expect(result.services.singleWhere((item) => item.code == 'A1').price, 15);
     expect(result.items.singleWhere((item) => item.code == '0176').price, 2.5);
     expect(store.value, same(result));
+    expect(
+      store.value?.administrator.healthFacilityCode,
+      result.administrator.healthFacilityCode,
+    );
     expect(progress, [
       'Validating Claim Administrator…',
       'Checking for updates',

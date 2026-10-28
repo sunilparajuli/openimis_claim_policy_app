@@ -44,67 +44,104 @@ Future<void> showAppFeedbackDialog({
     barrierDismissible: isDismissible,
     builder: (dialogContext) => Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: configuration.color.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  configuration.icon,
-                  color: configuration.color,
-                  size: 42,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                title ?? configuration.title,
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  dialogContext,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: Theme.of(dialogContext).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 12,
-                runSpacing: 8,
-                children: [
-                  if (actionLabel != null && onAction != null)
-                    AppButton(
-                      variant: AppButtonVariant.secondary,
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                        onAction();
-                      },
-                      label: Text(actionLabel),
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(height: 5, color: configuration.color),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: configuration.color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            configuration.icon,
+                            color: configuration.color,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            title ?? configuration.title,
+                            style: Theme.of(dialogContext).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        if (isDismissible)
+                          IconButton(
+                            tooltip: MaterialLocalizations.of(
+                              dialogContext,
+                            ).closeButtonTooltip,
+                            onPressed: () => Navigator.pop(dialogContext),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                      ],
                     ),
-                  AppButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    label: Text(context.tr('OK')),
-                  ),
-                ],
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          dialogContext,
+                        ).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        message,
+                        style: Theme.of(dialogContext).textTheme.bodyMedium
+                            ?.copyWith(
+                              height: 1.45,
+                              color: Theme.of(
+                                dialogContext,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    if (actionLabel != null && onAction != null) ...[
+                      AppButton(
+                        expanded: true,
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          onAction();
+                        },
+                        label: Text(actionLabel),
+                      ),
+                      const SizedBox(height: 10),
+                      AppButton(
+                        expanded: true,
+                        variant: AppButtonVariant.secondary,
+                        onPressed: () => Navigator.pop(dialogContext),
+                        label: Text(context.tr('Cancel')),
+                      ),
+                    ] else
+                      AppButton(
+                        expanded: true,
+                        onPressed: () => Navigator.pop(dialogContext),
+                        label: Text(context.tr('OK')),
+                      ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     ),

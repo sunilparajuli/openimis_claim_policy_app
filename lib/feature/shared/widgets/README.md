@@ -194,8 +194,9 @@ belongs in `CustomScrollView.slivers`.
 
 ## Loading, errors and empty results
 
-Use a feedback sheet after an operation succeeds or fails. It provides the
-standard icon, color, title, responsive width and acknowledgement button:
+Use the centered, sheet-styled feedback popup after an operation succeeds or
+fails. It provides the standard icon, color, title, message panel, responsive
+width and full-width actions:
 
 ```dart
 await showAppFeedbackDialog(
