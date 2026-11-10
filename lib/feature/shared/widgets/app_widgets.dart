@@ -4,6 +4,7 @@ library;
 export 'app_app_bar.dart';
 export 'app_autocomplete_field.dart';
 export 'app_bottom_sheet.dart';
+export 'app_bottom_navigation.dart';
 export 'app_button.dart';
 export 'app_date_field.dart';
 export 'app_display_components.dart';

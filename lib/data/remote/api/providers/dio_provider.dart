@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:openimis_claim_policy_app/data/app_providers/app_provider.dart';
+import 'package:openimis_claim_policy_app/core/auth/session_expiration_provider.dart';
 import 'package:openimis_claim_policy_app/data/local/secure_storage_service.dart';
 import 'package:openimis_claim_policy_app/data/remote/api/client/auth_interceptor.dart';
 import 'package:openimis_claim_policy_app/data/remote/api/client/custom_log_interceptor.dart';
@@ -40,7 +41,15 @@ Dio dio(Ref ref) {
     dio.interceptors.add(OpenImisMockInterceptor(forceDemo: true));
   }
 
-  dio.interceptors.add(AuthInterceptor(storage: storage, dio: dio));
+  dio.interceptors.add(
+    AuthInterceptor(
+      storage: storage,
+      dio: dio,
+      onUnauthorized: () async {
+        ref.read(sessionExpirationProvider.notifier).notifyUnauthorized();
+      },
+    ),
+  );
   dio.interceptors.add(RetryInterceptor(dio: dio));
   dio.interceptors.add(ErrorInterceptor());
   dio.interceptors.add(CustomLoggerInterceptor());

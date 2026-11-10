@@ -216,50 +216,56 @@ class OpenImisMockInterceptor implements Interceptor {
                           'name': 'Rapta District Hospital',
                           'servicesPricelist': {
                             'details': {
-                              'edges': [
-                                {
-                                  'node': {
-                                    'service': {
-                                      'code': 'A1',
-                                      'name': 'Consultation',
-                                      'price': 15.0,
-                                    },
+                              'edges': List.generate(30000, (index) {
+                                final service = switch (index) {
+                                  0 => {
+                                    'code': 'A1',
+                                    'name': 'Consultation',
+                                    'price': 15.0,
                                   },
-                                },
-                                {
-                                  'node': {
-                                    'service': {
-                                      'code': 'LAB01',
-                                      'name': 'Blood Analysis',
-                                      'price': 8.0,
-                                    },
+                                  1 => {
+                                    'code': 'LAB01',
+                                    'name': 'Blood Analysis',
+                                    'price': 8.0,
                                   },
-                                },
-                              ],
+                                  _ => {
+                                    'code':
+                                        'SRV-${index.toString().padLeft(5, '0')}',
+                                    'name': 'Medical service $index',
+                                    'price': (index % 100) + 1.0,
+                                  },
+                                };
+                                return {
+                                  'node': {'service': service},
+                                };
+                              }),
                             },
                           },
                           'itemsPricelist': {
                             'details': {
-                              'edges': [
-                                {
-                                  'node': {
-                                    'item': {
-                                      'code': '0176',
-                                      'name': 'Oral Rehydration Salts',
-                                      'price': 2.5,
-                                    },
+                              'edges': List.generate(30000, (index) {
+                                final item = switch (index) {
+                                  0 => {
+                                    'code': '0176',
+                                    'name': 'Oral Rehydration Salts',
+                                    'price': 2.5,
                                   },
-                                },
-                                {
-                                  'node': {
-                                    'item': {
-                                      'code': 'PAR500',
-                                      'name': 'Paracetamol 500mg',
-                                      'price': 1.0,
-                                    },
+                                  1 => {
+                                    'code': 'PAR500',
+                                    'name': 'Paracetamol 500mg',
+                                    'price': 1.0,
                                   },
-                                },
-                              ],
+                                  _ => {
+                                    'code':
+                                        'ITM-${index.toString().padLeft(5, '0')}',
+                                    'name': 'Medical item $index',
+                                    'price': (index % 100) + 0.5,
+                                  },
+                                };
+                                return {
+                                  'node': {'item': item},
+                                };
+                              }),
                             },
                           },
                         },

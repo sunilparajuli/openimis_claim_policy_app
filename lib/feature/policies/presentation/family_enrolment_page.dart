@@ -218,7 +218,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
 
     final member = await showAppBottomSheet<FamilyMember>(
       context: context,
-      heightFactor: 0.72,
+      heightFactor: 0.9,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setModalState) => AppSheetContent(
           title: Row(
@@ -379,25 +379,32 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Family: ${family.headName}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Family: ${family.headName}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          Text(
-                            '${family.village}, ${family.ward}, ${family.district} (${family.region})',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
+                            Text(
+                              '${family.village}, ${family.ward}, ${family.district} (${family.region})',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       IconButton(
                         icon: const Icon(Icons.close),
                         onPressed: () => Navigator.pop(ctx),
@@ -469,6 +476,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                           ),
                           const SizedBox(height: 12),
                           AppButton(
+                            expanded: true,
                             variant: AppButtonVariant.secondary,
                             onPressed: () async {
                               final member = await _showAddFamilyMemberDialog();

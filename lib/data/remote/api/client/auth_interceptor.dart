@@ -6,10 +6,15 @@ import 'package:openimis_claim_policy_app/data/local/secure_storage_service.dart
 class AuthInterceptor implements Interceptor {
   final SecureStorageService _storage;
   final Dio _dio;
+  final Future<void> Function() _onUnauthorized;
 
-  AuthInterceptor({required SecureStorageService storage, required Dio dio})
-    : _storage = storage,
-      _dio = dio;
+  AuthInterceptor({
+    required SecureStorageService storage,
+    required Dio dio,
+    required Future<void> Function() onUnauthorized,
+  }) : _storage = storage,
+       _dio = dio,
+       _onUnauthorized = onUnauthorized;
 
   @override
   Future<void> onRequest(
@@ -35,8 +40,12 @@ class AuthInterceptor implements Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    // Check if error is 401 Unauthorized
-    if (err.response?.statusCode == 401) {
+    final authorization = err.requestOptions.headers['Authorization']
+        ?.toString();
+    final wasAuthenticated = authorization?.startsWith('Bearer ') ?? false;
+
+    // Login failures have no bearer token and must remain credential errors.
+    if (err.response?.statusCode == 401 && wasAuthenticated) {
       if (kDebugMode) {
         debugPrint('🔑 Received 401 - Attempting token refresh');
       }
@@ -74,7 +83,10 @@ class AuthInterceptor implements Interceptor {
               if (kDebugMode) {
                 debugPrint('❌ Failed to retry request after token refresh: $e');
               }
+              await _clearTokensAndLogout();
             }
+          } else {
+            await _clearTokensAndLogout();
           }
         } catch (e) {
           if (kDebugMode) {
@@ -104,7 +116,8 @@ class AuthInterceptor implements Interceptor {
     try {
       // Example refresh token endpoint
       // Replace this with your actual API endpoint
-      final response = await _dio.post(
+      final refreshDio = Dio(_dio.options);
+      final response = await refreshDio.post(
         '/auth/refresh',
         data: {'refresh_token': refreshToken},
       );
@@ -132,9 +145,8 @@ class AuthInterceptor implements Interceptor {
   /// Clear tokens and logout user
   Future<void> _clearTokensAndLogout() async {
     await _storage.clearAll();
+    await _onUnauthorized();
 
-    // TODO: Navigate to login screen or emit logout event
-    // This could be done through a navigation service or event bus
     if (kDebugMode) {
       debugPrint('🚪 User logged out - tokens cleared');
     }

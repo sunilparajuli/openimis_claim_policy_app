@@ -606,18 +606,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
 
-          // Drawer Navigation
-          ListTile(
-            dense: true,
-            leading: const Icon(Icons.dashboard_outlined),
-            title: Text(
-              context.tr('Dashboard'),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            onTap: () => Navigator.pop(context),
-          ),
-
-          const Divider(),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
@@ -630,42 +618,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
 
-          ListTile(
-            dense: true,
-            leading: const Icon(Icons.list_alt_rounded),
-            title: Text(
-              context.tr('Claims Listing'),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            onTap: () async {
-              Navigator.pop(context);
-              if (await ensureClaimAdministratorConfigured(context, ref) &&
-                  context.mounted) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ClaimsListingPage()),
-                );
-              }
-            },
-          ),
-          ListTile(
-            dense: true,
-            leading: const Icon(Icons.add_task_rounded),
-            title: Text(
-              context.tr('New Claim Form'),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            onTap: () async {
-              Navigator.pop(context);
-              if (await ensureClaimAdministratorConfigured(context, ref) &&
-                  context.mounted) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ClaimWizardPage()),
-                );
-              }
-            },
-          ),
           ListTile(
             dense: true,
             leading: const Icon(Icons.category_outlined),
@@ -715,17 +667,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
 
-          ListTile(
-            leading: const Icon(Icons.family_restroom_rounded),
-            title: Text(context.tr('Household Enrolment')),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FamilyEnrolmentPage()),
-              );
-            },
-          ),
           ListTile(
             leading: const Icon(Icons.person_search_rounded),
             title: Text(context.tr('Insuree & Policy Enquiry')),

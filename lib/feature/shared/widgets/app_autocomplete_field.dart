@@ -18,6 +18,8 @@ class AppAutocompleteField<T extends Object> extends StatelessWidget {
     this.initialValue,
     this.prefixIcon,
     this.noResultsText = 'No matching results',
+    this.minSearchLength = 0,
+    this.maxResults = 100,
     this.enabled = true,
     this.onCleared,
   });
@@ -31,12 +33,20 @@ class AppAutocompleteField<T extends Object> extends StatelessWidget {
   final T? initialValue;
   final Widget? prefixIcon;
   final String noResultsText;
+
+  /// Minimum number of typed characters before options are searched.
+  final int minSearchLength;
+
+  /// Maximum number of suggestions exposed to the popup at once.
+  final int maxResults;
   final bool enabled;
   final VoidCallback? onCleared;
 
   @override
   Widget build(BuildContext context) {
-    final values = options.toList(growable: false);
+    // Keep the original iterable: eagerly copying a 30k catalog on every
+    // parent rebuild adds avoidable allocations. The query is searched lazily.
+    final values = options;
 
     return Autocomplete<T>(
       initialValue: initialValue == null
@@ -45,13 +55,15 @@ class AppAutocompleteField<T extends Object> extends StatelessWidget {
       displayStringForOption: displayStringForOption,
       optionsBuilder: (value) {
         final query = value.text.trim().toLowerCase();
-        if (query.isEmpty) return values;
-        return values.where((option) {
-          final searchable =
-              searchStringForOption?.call(option) ??
-              displayStringForOption(option);
-          return searchable.toLowerCase().contains(query);
-        });
+        if (query.length < minSearchLength) return <T>[];
+        return values
+            .where((option) {
+              final searchable =
+                  searchStringForOption?.call(option) ??
+                  displayStringForOption(option);
+              return searchable.toLowerCase().contains(query);
+            })
+            .take(maxResults);
       },
       onSelected: onSelected,
       fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
@@ -66,6 +78,11 @@ class AppAutocompleteField<T extends Object> extends StatelessWidget {
             decoration: InputDecoration(
               labelText: labelText,
               hintText: hintText,
+              helperText:
+                  minSearchLength > 0 &&
+                      value.text.trim().length < minSearchLength
+                  ? context.tr('Type at least 2 characters to search')
+                  : null,
               prefixIcon: prefixIcon,
               suffixIcon: onCleared != null && value.text.isNotEmpty
                   ? IconButton(

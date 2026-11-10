@@ -241,6 +241,10 @@ const frenchUiTranslations = <String, String>{
   'Swiss Franc': 'Franc suisse',
   'British Pound': 'Livre sterling',
   'Claims & Policies': 'Prestations et polices',
+  'Home': 'Accueil',
+  'Claims': 'Prestations',
+  'Enrolment': 'Inscription',
+  'Profile': 'Profil',
   'CLAIMS MANAGEMENT': 'GESTION DES PRESTATIONS',
   'POLICIES & ENROLMENT': 'POLICES ET INSCRIPTIONS',
   'Claims Listing': 'Liste des prestations',
@@ -266,11 +270,25 @@ const frenchUiTranslations = <String, String>{
   'Insuree': 'Assuré',
   'Running Total': 'Total en cours',
   'Claim Submitted Successfully': 'Prestation soumise avec succès',
-  'Claim Saved Offline (SQLite)': 'Prestation enregistrée hors ligne (SQLite)',
+  'Claim Saved Offline': 'Prestation enregistrée hors ligne',
   'Done': 'Terminé',
   'Post Claim': 'Soumettre la prestation',
   'Post Claim Offline': 'Soumettre la prestation hors ligne',
   'Back': 'Retour',
+  'Skip': 'Passer',
+  'Next': 'Suivant',
+  'Get Started': 'Commencer',
+  'Type at least 2 characters to search':
+      'Saisissez au moins 2 caractères pour rechercher',
+  'Manage healthcare operations': 'Gérez les opérations de santé',
+  'Handle claims and policy enrolment from one secure mobile workspace.':
+      'Gérez les prestations et l’inscription aux polices depuis un espace mobile sécurisé.',
+  'Work wherever care happens': 'Travaillez là où les soins sont dispensés',
+  'Save claims offline and upload them when a connection becomes available.':
+      'Enregistrez les prestations hors ligne et envoyez-les dès qu’une connexion est disponible.',
+  'Keep information connected': 'Gardez les informations connectées',
+  'Use synchronized services, items, diagnoses, families, and insuree records.':
+      'Utilisez des prestations, articles, diagnostics, familles et dossiers d’assurés synchronisés.',
   'Claim Details': 'Détails de la prestation',
   'Diagnosis': 'Diagnostic',
   'Review': 'Vérification',
@@ -443,6 +461,7 @@ const frenchUiTranslations = <String, String>{
       'Erreur du serveur. Veuillez réessayer plus tard.',
   'Session expired. Please login again.':
       'Session expirée. Veuillez vous reconnecter.',
+  'Session Expired': 'Session expirée',
   'Access denied. You don\'t have permission.':
       'Accès refusé. Vous ne disposez pas des autorisations nécessaires.',
   'Resource not found.': 'Ressource introuvable.',

@@ -62,7 +62,7 @@ class AboutOpenImisPage extends StatelessWidget {
                   const Divider(),
                   _infoRow(
                     'Core Architecture',
-                    'FHIR R4 • GraphQL • SQLite Offline',
+                    'FHIR R4 • GraphQL • Offline support',
                   ),
                   const Divider(),
                   _infoRow('License', 'GNU AGPL v3.0'),

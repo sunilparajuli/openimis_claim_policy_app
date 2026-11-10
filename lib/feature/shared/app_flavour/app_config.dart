@@ -13,6 +13,7 @@ class AppConfig {
     this.dataMode = AppDataMode.live,
     this.googleMapsApiKey = '',
     this.initializeCrashlytics = true,
+    this.onboardingEnabled = true,
   });
 
   final String launchTitle;
@@ -22,6 +23,7 @@ class AppConfig {
   final AppDataMode dataMode;
   final String googleMapsApiKey;
   final bool initializeCrashlytics;
+  final bool onboardingEnabled;
 }
 
 // Provider for AppConfig

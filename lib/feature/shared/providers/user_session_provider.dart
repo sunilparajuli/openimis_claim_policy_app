@@ -165,6 +165,7 @@ class UserSessionNotifier extends _$UserSessionNotifier {
     if (!session.isGuest && token != null) {
       await _storage.saveAuthToken(token);
       await _storage.saveUserCredentials(username: username, email: email);
+      await _storage.setSessionActive(true);
     }
 
     state = AsyncData(session);
@@ -172,15 +173,19 @@ class UserSessionNotifier extends _$UserSessionNotifier {
 
   /// Logout and clear secure storage
   Future<void> logout({bool preserveForBiometrics = false}) async {
-    if (!preserveForBiometrics) await _storage.clearAll();
+    if (preserveForBiometrics) {
+      await _storage.setSessionActive(false);
+    } else {
+      await _storage.clearAll();
+    }
     state = const AsyncData(null);
   }
 
-  Future<bool> hasSavedSession() => _storage.isLoggedIn();
+  Future<bool> hasSavedSession() => _storage.hasSavedCredentials();
 
   /// Restores the securely stored session only after biometric verification.
   Future<UserSession?> restoreSavedSession() async {
-    if (!await _storage.isLoggedIn()) return null;
+    if (!await _storage.hasSavedCredentials()) return null;
     final username = await _storage.getUsername();
     final token = await _storage.getAuthToken();
     if (username == null || token == null || token.isEmpty) return null;
@@ -196,6 +201,7 @@ class UserSessionNotifier extends _$UserSessionNotifier {
       healthFacilityName: await _storage.getHealthFacilityName(),
       enrolmentOfficerCode: await _storage.getEnrolmentOfficerCode(),
     );
+    await _storage.setSessionActive(true);
     state = AsyncData(session);
     return session;
   }

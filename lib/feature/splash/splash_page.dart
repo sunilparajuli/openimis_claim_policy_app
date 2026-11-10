@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
 import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
-import 'package:openimis_claim_policy_app/core/auth/biometric_auth_service.dart';
+import 'package:openimis_claim_policy_app/data/local/onboarding_preferences.dart';
+import 'package:openimis_claim_policy_app/core/config/onboarding_config.dart';
+import 'package:openimis_claim_policy_app/feature/shared/app_flavour/app_config.dart';
 
 @RoutePage()
 class SplashPage extends ConsumerStatefulWidget {
@@ -17,6 +19,7 @@ class SplashPage extends ConsumerStatefulWidget {
 class _SplashPageState extends ConsumerState<SplashPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool _showAnimatedSplash = false;
 
   @override
   void initState() {
@@ -29,6 +32,16 @@ class _SplashPageState extends ConsumerState<SplashPage>
   }
 
   Future<void> _restoreSession() async {
+    final onboardingEnabled = ref.read(appConfigProvider).onboardingEnabled;
+    if (onboardingEnabled &&
+        onboardingSlides.isNotEmpty &&
+        !await OnboardingPreferences.isCompleted()) {
+      if (mounted) context.router.replace(const OnboardingRoute());
+      return;
+    }
+
+    if (mounted) setState(() => _showAnimatedSplash = true);
+
     final results = await Future.wait([
       Future<void>.delayed(const Duration(milliseconds: 1400)),
       ref.read(userSessionProvider.future),
@@ -37,14 +50,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
     final session = results[1] as UserSession?;
     final ready = session?.isAuthenticated == true;
     if (ready) {
-      final biometricEnabled = await ref.read(biometricEnabledProvider.future);
-      if (!mounted) return;
-      context.router.replaceAll([
-        if (biometricEnabled)
-          LoginRoute(title: 'Login')
-        else
-          const HomeWithTabsRoute(),
-      ]);
+      context.router.replaceAll([const HomeWithTabsRoute()]);
     } else {
       context.router.replace(LoginRoute(title: 'Login'));
     }
@@ -52,6 +58,14 @@ class _SplashPageState extends ConsumerState<SplashPage>
 
   @override
   Widget build(BuildContext context) {
+    if (!_showAnimatedSplash) {
+      return Scaffold(
+        backgroundColor: onboardingSlides.isEmpty
+            ? CustomColors.BrandPurple
+            : onboardingSlides.first.backgroundColor,
+      );
+    }
+
     return Scaffold(
       body: AnimatedBuilder(
         animation: _controller,

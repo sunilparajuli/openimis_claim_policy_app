@@ -29,6 +29,7 @@ class SecureStorageService {
   static const String _enrolmentOfficerCodeKey = 'enrolment_officer_code';
   static const String _biometricEnabledKey = 'biometric_enabled';
   static const String _biometricSetupOfferedKey = 'biometric_setup_offered';
+  static const String _sessionActiveKey = 'session_active';
 
   /// Save authentication token
   Future<void> saveAuthToken(String token) async {
@@ -136,16 +137,29 @@ class SecureStorageService {
   Future<bool> wasBiometricSetupOffered() async =>
       await _storage.read(key: _biometricSetupOfferedKey) == 'true';
 
+  Future<void> setSessionActive(bool active) =>
+      _storage.write(key: _sessionActiveKey, value: active.toString());
+
+  /// Active sessions resume automatically after an ordinary app restart.
+  /// A missing marker is treated as active for users upgrading from older builds.
+  Future<bool> isSessionActive() async {
+    if (!await hasSavedCredentials()) return false;
+    final value = await _storage.read(key: _sessionActiveKey);
+    return value == null || value == 'true';
+  }
+
   /// Clear all stored data
   Future<void> clearAll() async {
     await _storage.deleteAll();
   }
 
-  /// Check if user is logged in (has auth token)
-  Future<bool> isLoggedIn() async {
+  /// Credentials may remain after logout only to support explicit biometric login.
+  Future<bool> hasSavedCredentials() async {
     final token = await getAuthToken();
     return token != null && token.isNotEmpty;
   }
+
+  Future<bool> isLoggedIn() => isSessionActive();
 }
 
 /// Provider for SecureStorageService

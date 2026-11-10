@@ -14,6 +14,7 @@ void main() {
         ? AppDataMode.demo
         : AppDataMode.live,
     googleMapsApiKey: EnvDev.googleMapsApiKey,
+    onboardingEnabled: EnvDev.onboardingEnabled,
     launchTitle: 'openIMIS Dev',
     initializeCrashlytics: false,
   );

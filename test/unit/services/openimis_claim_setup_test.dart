@@ -42,6 +42,8 @@ void main() {
     expect(result.administrator.healthFacilityCode, 'RAHOS001');
     expect(result.administrator.healthFacilityName, 'Rapta District Hospital');
     expect(result.diagnoses, isNotEmpty);
+    expect(result.services, hasLength(30000));
+    expect(result.items, hasLength(30000));
     expect(result.services.singleWhere((item) => item.code == 'A1').price, 15);
     expect(result.items.singleWhere((item) => item.code == '0176').price, 2.5);
     expect(store.value, same(result));

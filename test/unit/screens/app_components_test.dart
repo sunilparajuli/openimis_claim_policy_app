@@ -159,6 +159,39 @@ void main() {
     expect(find.text('D000 Diagnosis 0'), findsNothing);
   });
 
+  testWidgets('Autocomplete handles a 30000-option service catalog', (
+    tester,
+  ) async {
+    final options = List.generate(
+      30000,
+      (index) =>
+          'SRV-${index.toString().padLeft(5, '0')} Medical service $index',
+    );
+    await tester.pumpWidget(
+      host(
+        AppAutocompleteField<String>(
+          options: options,
+          minSearchLength: 2,
+          maxResults: 50,
+          displayStringForOption: (option) => option,
+          searchStringForOption: (option) => option,
+          onSelected: (_) {},
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(TextFormField));
+    await tester.pump();
+    expect(find.text('SRV-00000 Medical service 0'), findsNothing);
+
+    await tester.enterText(find.byType(TextFormField), 'SRV-299');
+    await tester.pump();
+    expect(find.text('SRV-29900 Medical service 29900'), findsOneWidget);
+    expect(find.byType(ListTile), findsAtLeastNWidgets(1));
+    expect(find.byType(ListTile), findsNWidgets(6));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Date cancellation preserves value and external updates render', (
     tester,
   ) async {

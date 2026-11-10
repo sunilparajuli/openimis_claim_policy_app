@@ -82,6 +82,8 @@ both code and description:
 ```dart
 AppAutocompleteField<MedicalService>(
   options: services,
+  minSearchLength: 2,
+  maxResults: 50,
   labelText: 'Medical Service',
   hintText: 'Type a service name or code',
   displayStringForOption: (service) => '${service.code} — ${service.name}',
@@ -89,6 +91,10 @@ AppAutocompleteField<MedicalService>(
   onSelected: (service) => setState(() => selectedService = service),
 )
 ```
+
+Large catalogs should set a minimum query length and result cap. The widget
+retains the supplied iterable and filters only after the configured number of
+characters is entered; the popup then builds only the capped, scrollable set.
 
 Each non-null selection must match exactly one item. Use `enabled: false` or
 `onChanged: null` to disable. Supports `validator`, `onSaved`, `hint`, `decoration`

@@ -21,6 +21,13 @@ abstract class EnvDev {
 
   @EnviedField(varName: 'GOOGLE_MAPS_API_KEY', obfuscate: true)
   static final String googleMapsApiKey = _EnvDev.googleMapsApiKey;
+
+  @EnviedField(
+    varName: 'ONBOARDING_ENABLED',
+    defaultValue: true,
+    obfuscate: false,
+  )
+  static final bool onboardingEnabled = _EnvDev.onboardingEnabled;
 }
 
 /// Production environment configuration
@@ -42,6 +49,13 @@ abstract class EnvProd {
 
   @EnviedField(varName: 'GOOGLE_MAPS_API_KEY', obfuscate: true)
   static final String googleMapsApiKey = _EnvProd.googleMapsApiKey;
+
+  @EnviedField(
+    varName: 'ONBOARDING_ENABLED',
+    defaultValue: true,
+    obfuscate: false,
+  )
+  static final bool onboardingEnabled = _EnvProd.onboardingEnabled;
 }
 
 /// Convenience class - use EnvDev or EnvProd directly
@@ -52,4 +66,5 @@ abstract class Env {
   static String get environment => EnvDev.environment;
   static String get dataMode => EnvDev.dataMode;
   static String get googleMapsApiKey => EnvDev.googleMapsApiKey;
+  static bool get onboardingEnabled => EnvDev.onboardingEnabled;
 }

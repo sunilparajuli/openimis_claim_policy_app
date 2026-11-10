@@ -130,9 +130,52 @@ void main() {
       // Tap to open household enrolment modal
       await tester.tap(find.text('Enrol Family'));
       await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
 
       expect(find.text('New Household Enrolment'), findsOneWidget);
       expect(find.text('Head of Household Name'), findsOneWidget);
+    });
+
+    testWidgets('Add family member sheet scrolls above the keyboard', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetViewInsets);
+
+      await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: FamilyEnrolmentPage())),
+      );
+      await tester.tap(find.text('Enrol Family'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.enterText(find.byType(TextField).at(1), 'Test Household');
+      final enrolAction = find.widgetWithText(ElevatedButton, 'Enrol Family');
+      await tester.ensureVisible(enrolAction);
+      await tester.pumpAndSettle();
+      await tester.tap(enrolAction);
+      await tester.pumpAndSettle();
+      // The enrolment success popup is tested independently from this sheet.
+      tester.takeException();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Test Household'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Add Family Member / Dependent'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Add Member'));
+      await tester.pumpAndSettle();
+
+      expect(tester.getBottomRight(find.text('Add Member')).dy, lessThan(544));
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets(

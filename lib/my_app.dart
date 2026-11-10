@@ -6,8 +6,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:openimis_claim_policy_app/core/localization/locale_provider.dart';
+import 'package:openimis_claim_policy_app/core/auth/session_expiration_provider.dart';
 import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.dart';
+import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_theme.dart';
+import 'package:openimis_claim_policy_app/feature/shared/widgets/app_feedback.dart';
 
 part 'my_app.g.dart';
 
@@ -36,9 +40,45 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> {
   final _appRouter = AppRouter();
+  bool _handlingSessionExpiration = false;
+
+  Future<void> _handleSessionExpiration() async {
+    if (_handlingSessionExpiration) return;
+    _handlingSessionExpiration = true;
+
+    try {
+      await ref.read(userSessionProvider.notifier).logout();
+
+      final context = _appRouter.navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        await showAppFeedbackDialog(
+          context: context,
+          type: AppFeedbackType.warning,
+          title: context.tr('Session Expired'),
+          message: context.tr('Session expired. Please login again.'),
+          isDismissible: false,
+        );
+      }
+
+      if (mounted) {
+        await _appRouter.replaceAll([LoginRoute(title: 'Login')]);
+      }
+    } finally {
+      ref.read(sessionExpirationProvider.notifier).acknowledge();
+      _handlingSessionExpiration = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<bool>(sessionExpirationProvider, (previous, next) {
+      if (next && previous != true) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _handleSessionExpiration(),
+        );
+      }
+    });
+
     final themeMode = ref.watch(themeModeProvider);
     final brightness = themeMode == ThemeMode.light
         ? Brightness.light

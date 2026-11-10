@@ -234,13 +234,13 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       context: context,
       builder: (ctx) => AppSheetContent(
         icon: const Icon(
-          Icons.storage_rounded,
+          Icons.offline_pin_rounded,
           color: CustomColors.BrandPurple,
           size: 48,
         ),
-        title: Text(context.tr('Claim Saved Offline (SQLite)')),
+        title: Text(context.tr('Claim Saved Offline')),
         content: Text(
-          'Claim ${submission.claimCode} has been stored in the local openIMIS database and is ready to upload.',
+          'Claim ${submission.claimCode} has been saved securely on this device and is ready to upload when a connection is available.',
         ),
         actions: [
           AppButton(
@@ -347,7 +347,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
                           variant: AppButtonVariant.secondary,
                           onPressed: _isSubmitting ? null : _saveOfflineClaim,
                           icon: const Icon(
-                            Icons.storage_rounded,
+                            Icons.save_alt_rounded,
                             color: CustomColors.BrandPurple,
                           ),
                           label: Text(
@@ -909,6 +909,8 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
             children: [
               AppAutocompleteField<MedicalService>(
                 options: services,
+                minSearchLength: 2,
+                maxResults: 50,
                 labelText: context.tr('Medical Service'),
                 hintText: context.tr('Type a service name or code'),
                 prefixIcon: const Icon(Icons.medical_services_outlined),
@@ -994,6 +996,8 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
             children: [
               AppAutocompleteField<MedicationItem>(
                 options: items,
+                minSearchLength: 2,
+                maxResults: 50,
                 labelText: context.tr('Medication / Item'),
                 hintText: context.tr('Type an item name or code'),
                 prefixIcon: const Icon(Icons.medication_outlined),
