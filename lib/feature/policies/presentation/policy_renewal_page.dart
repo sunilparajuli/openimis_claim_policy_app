@@ -2,6 +2,7 @@ import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dar
 import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/utils/insuree_number.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/data/remote/graphql/graphql_service_provider.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
@@ -52,6 +53,12 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
   Future<void> _renewPolicy() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final normalizedChfId = InsureeNumber.normalize(_chfIdController.text);
+    _chfIdController.value = TextEditingValue(
+      text: normalizedChfId,
+      selection: TextSelection.collapsed(offset: normalizedChfId.length),
+    );
+
     setState(() => _isRenewing = true);
 
     const renewMutation = r'''
@@ -73,7 +80,7 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
         renewMutation,
         variables: {
           'input': {
-            'chfId': _chfIdController.text.trim(),
+            'chfId': normalizedChfId,
             'productCode': _selectedProduct,
             'payerType': _payerType,
             'receiptNumber': _receiptNumberController.text.trim(),
@@ -168,9 +175,18 @@ class _PolicyRenewalPageState extends ConsumerState<PolicyRenewalPage> {
                           prefixIcon: const Icon(Icons.badge),
                           border: const OutlineInputBorder(),
                         ),
-                        validator: (val) => val == null || val.isEmpty
-                            ? 'CHF ID is required'
-                            : null,
+                        validator: (value) {
+                          final issue = InsureeNumber.validate(value ?? '');
+                          return switch (issue) {
+                            InsureeNumberIssue.required => context.tr(
+                              'Please enter Insurance Number',
+                            ),
+                            InsureeNumberIssue.invisibleCharacter => context.tr(
+                              'Insurance Number contains invisible characters',
+                            ),
+                            null => null,
+                          };
+                        },
                       ),
                       const SizedBox(height: 16),
                       AppDropdownField<String>(

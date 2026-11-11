@@ -2,6 +2,7 @@ import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dar
 import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/utils/insuree_number.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/claims/presentation/claim_wizard_page.dart';
 import 'package:openimis_claim_policy_app/feature/insuree/models/insuree_model.dart';
@@ -30,8 +31,20 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
   }
 
   Future<void> _searchInsuree() async {
-    final query = _chfIdController.text.trim();
-    if (query.isEmpty) return;
+    final query = InsureeNumber.normalize(_chfIdController.text);
+    final issue = InsureeNumber.validate(query);
+    if (issue != null) {
+      setState(() {
+        _errorMessage = issue == InsureeNumberIssue.required
+            ? context.tr('Please enter Insurance Number')
+            : context.tr('Insurance Number contains invisible characters');
+      });
+      return;
+    }
+    _chfIdController.value = TextEditingValue(
+      text: query,
+      selection: TextSelection.collapsed(offset: query.length),
+    );
 
     setState(() {
       _isLoading = true;

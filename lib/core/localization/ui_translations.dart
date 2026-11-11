@@ -462,6 +462,8 @@ const frenchUiTranslations = <String, String>{
   'Session expired. Please login again.':
       'Session expirée. Veuillez vous reconnecter.',
   'Session Expired': 'Session expirée',
+  'Insurance Number contains invisible characters':
+      'Le numéro d’assurance contient des caractères invisibles',
   'Access denied. You don\'t have permission.':
       'Accès refusé. Vous ne disposez pas des autorisations nécessaires.',
   'Resource not found.': 'Ressource introuvable.',
