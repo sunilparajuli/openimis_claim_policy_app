@@ -2,6 +2,7 @@ import 'package:openimis_claim_policy_app/feature/shared/widgets/app_widgets.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/utils/insuree_number.dart';
 import 'package:openimis_claim_policy_app/feature/insuree/presentation/insuree_enquiry_page.dart';
 import 'package:openimis_claim_policy_app/feature/policies/presentation/policy_renewal_page.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
@@ -319,15 +320,27 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
             ),
             AppButton(
               onPressed: () {
+                final normalizedChfId = InsureeNumber.normalize(
+                  chfIdController.text,
+                );
+                final insureeNumberIssue = InsureeNumber.validate(
+                  normalizedChfId,
+                );
                 if (nameController.text.trim().isEmpty ||
-                    chfIdController.text.trim().isEmpty ||
+                    insureeNumberIssue != null ||
                     relationship == null ||
                     gender == null ||
                     dateOfBirth == null) {
                   showAppFeedbackDialog(
                     context: sheetContext,
                     type: AppFeedbackType.warning,
-                    message: context.tr('Complete all family member fields.'),
+                    message:
+                        insureeNumberIssue ==
+                            InsureeNumberIssue.invisibleCharacter
+                        ? context.tr(
+                            'Insurance Number contains invisible characters',
+                          )
+                        : context.tr('Complete all family member fields.'),
                   );
                   return;
                 }
@@ -338,7 +351,7 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                     relation: relationship!,
                     gender: gender!,
                     dob: dateOfBirth!.toIso8601String().substring(0, 10),
-                    chfId: chfIdController.text.trim(),
+                    chfId: normalizedChfId,
                   ),
                 );
               },

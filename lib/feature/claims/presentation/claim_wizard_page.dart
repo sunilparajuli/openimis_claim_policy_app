@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:openimis_claim_policy_app/core/config/claim_form_requirements_provider.dart';
 import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/utils/insuree_number.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
@@ -84,6 +85,8 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
 
   double get _grandTotal => _servicesTotal + _itemsTotal;
 
+  String get _normalizedChfId => InsureeNumber.normalize(_chfIdController.text);
+
   String _requiredLabel(String label, bool required) =>
       required ? '$label *' : label;
 
@@ -94,8 +97,11 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         const ClaimFormRequirements();
     final claimCode = _claimCodeController.text.trim();
 
-    if (_chfIdController.text.trim().isEmpty) {
+    final insureeNumberIssue = InsureeNumber.validate(_chfIdController.text);
+    if (insureeNumberIssue == InsureeNumberIssue.required) {
       message = 'Please enter Insurance Number';
+    } else if (insureeNumberIssue == InsureeNumberIssue.invisibleCharacter) {
+      message = 'Insurance Number contains invisible characters';
     } else if (claimCode.isEmpty) {
       message = 'Please enter Claim Code';
     } else if (claimCode.length > 8) {
@@ -137,7 +143,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       claimCode: _claimCodeController.text.trim(),
       healthFacility: _healthFacilityController.text.trim(),
       claimAdmin: _claimAdminController.text.trim(),
-      insureeChfId: _chfIdController.text.trim(),
+      insureeChfId: _normalizedChfId,
       startDate: _startDate,
       endDate: _endDate,
       claimDate: DateTime.now(),
@@ -210,7 +216,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       claimCode: _claimCodeController.text.trim(),
       healthFacility: _healthFacilityController.text.trim(),
       claimAdmin: _claimAdminController.text.trim(),
-      insureeChfId: _chfIdController.text.trim(),
+      insureeChfId: _normalizedChfId,
       startDate: _startDate,
       endDate: _endDate,
       claimDate: DateTime.now(),
