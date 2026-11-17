@@ -42,16 +42,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userSession = ref.watch(userSessionProvider);
 
     return Scaffold(
-      appBar: AppAppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            onPressed: () => context.router.push(const SettingsRoute()),
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: context.tr('Settings'),
-          ),
-        ],
-      ),
+      appBar: AppAppBar(title: Text(widget.title)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -139,16 +130,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
           ),
           const SizedBox(height: 12),
-
-          _buildMenuCard(
-            context,
-            semanticsId: 'profile_settings_menu',
-            icon: Icons.settings_outlined,
-            title: context.tr('Settings'),
-            subtitle: context.tr('App preferences and configuration'),
-            onTap: () => context.router.push(const SettingsRoute()),
-          ),
-          const SizedBox(height: 8),
 
           _buildMenuCard(
             context,

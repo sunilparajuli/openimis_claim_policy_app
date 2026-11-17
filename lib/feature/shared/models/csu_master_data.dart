@@ -75,8 +75,7 @@ class CsuMasterData {
 
   /// Only exposed frontend settings are available to app workflows.
   List<CsuMasterDataRecord> get exposedFrontendConfiguration =>
-      records('ModuleConfiguration')
-          .toList(growable: false);
+      records('ModuleConfiguration').toList(growable: false);
 
   static bool _isTrue(Object? value) =>
       value == true || value?.toString().toLowerCase() == 'true';
@@ -113,8 +112,54 @@ class CsuMasterDataRecord {
 
   Object? operator [](String key) => values[key];
 
-  String? get code => values['code']?.toString();
-  String? get program => values['program']?.toString();
+  int? get id => _nullableInt(
+    _first(const [
+      'id',
+      'ProdID',
+      'ProductID',
+      'LocationId',
+      'OfficerID',
+      'HfID',
+      'EducationId',
+      'ProfessionId',
+      'RelationId',
+      'idProgram',
+    ]),
+  );
+
+  String? get code => _first(const [
+    'code',
+    'Code',
+    'ProductCode',
+    'LocationCode',
+    'HFCode',
+    'FamilyTypeCode',
+    'IdentificationCode',
+    'programCode',
+    'chequeImportLineCode',
+  ])?.toString();
+
+  String? get name => _first(const [
+    'name',
+    'ProductName',
+    'LocationName',
+    'HFName',
+    'FamilyType',
+    'IdentificationTypes',
+    'Education',
+    'Profession',
+    'Relation',
+    'Gender',
+    'Name',
+  ])?.toString();
+
+  String? get program {
+    final value = values['program'];
+    if (value is Map) {
+      return value['code']?.toString() ?? value['id']?.toString();
+    }
+    return value?.toString();
+  }
 
   /// In CSU product rules, zero means there is no age limit.
   int get minAge => _asInt(values['minAge']);
@@ -123,5 +168,18 @@ class CsuMasterDataRecord {
   static int _asInt(Object? value) {
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  Object? _first(List<String> keys) {
+    for (final key in keys) {
+      final value = values[key];
+      if (value != null && value.toString().isNotEmpty) return value;
+    }
+    return null;
+  }
+
+  static int? _nullableInt(Object? value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
   }
 }

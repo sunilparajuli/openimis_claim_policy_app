@@ -1,5 +1,6 @@
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/diagnosis_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_program.dart';
 
 enum ClaimVisitType {
   emergency('E', 'Emergency'),
@@ -14,13 +15,16 @@ enum ClaimVisitType {
 class ClaimSubmission {
   final String claimCode;
   final String healthFacility;
+  final String? healthFacilityId;
   final String claimAdmin;
+  final String? claimAdminId;
   final String insureeChfId;
   final DateTime startDate;
   final DateTime endDate;
   final DateTime claimDate;
   final ClaimVisitType visitType;
   final String? guaranteeNo;
+  final ClaimProgram? program;
   final Diagnosis primaryDiagnosis;
   final List<Diagnosis> secondaryDiagnoses;
   final List<ClaimedService> services;
@@ -29,13 +33,16 @@ class ClaimSubmission {
   ClaimSubmission({
     required this.claimCode,
     required this.healthFacility,
+    this.healthFacilityId,
     required this.claimAdmin,
+    this.claimAdminId,
     required this.insureeChfId,
     required this.startDate,
     required this.endDate,
     required this.claimDate,
     required this.visitType,
     this.guaranteeNo,
+    this.program,
     required this.primaryDiagnosis,
     this.secondaryDiagnoses = const [],
     this.services = const [],
@@ -56,13 +63,16 @@ class ClaimSubmission {
   Map<String, dynamic> toJson() => {
     'claimCode': claimCode,
     'healthFacility': healthFacility,
+    'healthFacilityId': healthFacilityId,
     'claimAdmin': claimAdmin,
+    'claimAdminId': claimAdminId,
     'insureeChfId': insureeChfId,
     'startDate': startDate.toIso8601String(),
     'endDate': endDate.toIso8601String(),
     'claimDate': claimDate.toIso8601String(),
     'visitType': visitType.name,
     'guaranteeNo': guaranteeNo,
+    'program': program?.toJson(),
     'primaryDiagnosis': primaryDiagnosis.toJson(),
     'secondaryDiagnoses': secondaryDiagnoses.map((d) => d.toJson()).toList(),
     'services': services.map((s) => s.toJson()).toList(),
@@ -73,7 +83,9 @@ class ClaimSubmission {
     return ClaimSubmission(
       claimCode: json['claimCode'] as String? ?? '',
       healthFacility: json['healthFacility'] as String? ?? '',
+      healthFacilityId: json['healthFacilityId'] as String?,
       claimAdmin: json['claimAdmin'] as String? ?? '',
+      claimAdminId: json['claimAdminId'] as String?,
       insureeChfId: json['insureeChfId'] as String? ?? '',
       startDate:
           DateTime.tryParse(json['startDate'] as String? ?? '') ??
@@ -88,6 +100,11 @@ class ClaimSubmission {
         orElse: () => ClaimVisitType.emergency,
       ),
       guaranteeNo: json['guaranteeNo'] as String?,
+      program: json['program'] is Map
+          ? ClaimProgram.fromJson(
+              Map<String, dynamic>.from(json['program'] as Map),
+            )
+          : null,
       primaryDiagnosis: Diagnosis.fromJson(
         json['primaryDiagnosis'] as Map<String, dynamic>? ?? {},
       ),
@@ -143,6 +160,13 @@ class ClaimSubmission {
       'resourceType': 'Claim',
       'status': 'active',
       'use': 'claim',
+      if (program != null)
+        'extension': [
+          {
+            'url': 'claim-program',
+            'valueReference': reference('Program', program!.code),
+          },
+        ],
       'identifier': [
         {
           'type': {

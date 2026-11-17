@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/diagnosis_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_program.dart';
 import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_repository.dart';
 import 'package:openimis_claim_policy_app/feature/claims/repositories/offline_claim_repository.dart';
 import 'package:openimis_claim_policy_app/feature/shared/widgets/shimmer_loading.dart';
@@ -29,6 +30,15 @@ class MockRemoteClaimRepository implements ClaimRepository {
 
   @override
   List<MedicationItem> getAvailableItems() => [];
+
+  @override
+  List<ClaimProgram> getPrograms() => [];
+
+  @override
+  bool containsDiagnosis(Diagnosis diagnosis) => false;
+
+  @override
+  bool containsProgram(ClaimProgram program) => false;
 }
 
 void main() {
@@ -129,6 +139,31 @@ void main() {
         expect(container.read(pendingClaimsCountProvider), equals(0));
       },
     );
+
+    test('syncPendingClaims uploads only the selected claims', () async {
+      final repo = OfflineClaimRepository();
+      final mockRemote = MockRemoteClaimRepository();
+      final suffix = DateTime.now().microsecondsSinceEpoch;
+      final firstCode = 'CLM-SELECT-ONE-$suffix';
+      final secondCode = 'CLM-SELECT-TWO-$suffix';
+      await repo.saveClaim(createSampleSubmission(firstCode));
+      await repo.saveClaim(createSampleSubmission(secondCode));
+
+      final pending = await repo.getPendingClaims();
+      final selected = pending.firstWhere(
+        (record) => record.claimCode == firstCode,
+      );
+      final result = await repo.syncPendingClaims([selected], mockRemote);
+
+      expect(result.total, 1);
+      expect(result.syncedCount, 1);
+      expect(mockRemote.submittedClaims.map((claim) => claim.claimCode), [
+        firstCode,
+      ]);
+      final remaining = await repo.getPendingClaims();
+      expect(remaining.any((record) => record.claimCode == firstCode), isFalse);
+      expect(remaining.any((record) => record.claimCode == secondCode), isTrue);
+    });
   });
 
   group('Shimmer Loading Widgets', () {

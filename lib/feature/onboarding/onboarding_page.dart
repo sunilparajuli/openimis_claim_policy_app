@@ -62,9 +62,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 alignment: Alignment.centerRight,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: TextButton(
+                  child: AppButton(
+                    variant: AppButtonVariant.text,
                     onPressed: _isFinishing ? null : _finish,
-                    child: Text(context.tr('Skip')),
+                    label: Text(context.tr('Skip')),
                   ),
                 ),
               ),

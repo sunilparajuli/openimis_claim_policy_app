@@ -16,9 +16,9 @@ import 'package:openimis_claim_policy_app/feature/policies/presentation/feedback
 import 'package:openimis_claim_policy_app/feature/policies/presentation/indicators_page.dart';
 import 'package:openimis_claim_policy_app/feature/policies/presentation/policy_renewal_page.dart';
 import 'package:openimis_claim_policy_app/feature/policies/presentation/reports_overview_page.dart';
-import 'package:openimis_claim_policy_app/feature/shared/navigation/app_router.gr.dart';
 import 'package:openimis_claim_policy_app/feature/shared/presentation/about_openimis_page.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/feature/home/widgets/csu_workspace_panel.dart';
 
 @RoutePage()
 class HomePage extends ConsumerStatefulWidget {
@@ -53,24 +53,14 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ],
         ),
-        actions: [
-          const LanguageSelectorButton(),
-          Semantics(
-            identifier: 'home_settings_button',
-            label: context.tr('Settings'),
-            button: true,
-            child: IconButton(
-              onPressed: () => context.router.push(const SettingsRoute()),
-              icon: const Icon(Icons.settings_outlined),
-              tooltip: context.tr('Settings'),
-            ),
-          ),
-        ],
+        actions: const [LanguageSelectorButton()],
       ),
       drawer: _buildDrawer(context, l10n),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const CsuWorkspacePanel(),
+          const SizedBox(height: 16),
           // Welcome Card
           Semantics(
             identifier: 'home_welcome_card',
@@ -724,14 +714,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
 
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: Text(context.tr('Settings')),
-            onTap: () {
-              Navigator.pop(context);
-              context.router.push(const SettingsRoute());
-            },
-          ),
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: Text(context.tr('About openIMIS')),

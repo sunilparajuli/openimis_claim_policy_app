@@ -26,6 +26,12 @@ class CsuMasterDataCache {
     await temporary.rename(file.path);
   }
 
+  Future<DateTime?> lastSynchronizedAt() async {
+    final file = await _archiveFile();
+    if (!await file.exists()) return null;
+    return file.lastModified();
+  }
+
   Future<File> _archiveFile() async {
     final directory = await _directoryProvider();
     return File('${directory.path}/$_archiveFileName');

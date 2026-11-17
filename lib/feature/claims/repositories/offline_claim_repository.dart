@@ -21,9 +21,24 @@ class OfflineClaimRepository {
     return _db.countPendingClaims();
   }
 
+  Future<void> markClaimsExported(Iterable<OfflineClaimRecord> claims) async {
+    for (final claim in claims) {
+      await _db.markClaimExported(claim.claimUuid);
+    }
+  }
+
   /// Sync all pending offline claims with openIMIS FHIR R4 server
   Future<SyncResult> syncAllPendingClaims(ClaimRepository remoteRepo) async {
     final pending = await getPendingClaims();
+    return syncPendingClaims(pending, remoteRepo);
+  }
+
+  /// Sync only the claims explicitly selected by the user.
+  Future<SyncResult> syncPendingClaims(
+    Iterable<OfflineClaimRecord> selectedClaims,
+    ClaimRepository remoteRepo,
+  ) async {
+    final pending = selectedClaims.toList(growable: false);
     if (pending.isEmpty) {
       return const SyncResult(syncedCount: 0, failedCount: 0, total: 0);
     }
@@ -103,6 +118,15 @@ class PendingClaimsCountNotifier extends Notifier<int> {
 
   Future<SyncResult> syncAll(ClaimRepository remoteRepo) async {
     final result = await _repo.syncAllPendingClaims(remoteRepo);
+    await refresh();
+    return result;
+  }
+
+  Future<SyncResult> syncSelected(
+    Iterable<OfflineClaimRecord> claims,
+    ClaimRepository remoteRepo,
+  ) async {
+    final result = await _repo.syncPendingClaims(claims, remoteRepo);
     await refresh();
     return result;
   }

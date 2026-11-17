@@ -15,14 +15,20 @@ class CsuMasterDataRepository {
   final HttpService _http;
   final CsuMasterDataCache _cache;
 
-  Future<CsuMasterData?> loadCached() async {
+  Future<CsuMasterDataSnapshot?> loadCached() async {
     final bytes = await _cache.read();
     if (bytes == null) return null;
     final json = await compute(decodeCsuMasterDataArchive, bytes);
-    return CsuMasterData.fromJson(json);
+    return CsuMasterDataSnapshot(
+      data: CsuMasterData.fromJson(json),
+      synchronizedAt: await _cache.lastSynchronizedAt(),
+      isFromCache: true,
+    );
   }
 
-  Future<CsuMasterData> download({ProgressCallback? onReceiveProgress}) async {
+  Future<CsuMasterDataSnapshot> download({
+    ProgressCallback? onReceiveProgress,
+  }) async {
     final response = await _http.get<List<int>>(
       csuMasterDataEndpoint,
       options: Options(
@@ -40,8 +46,24 @@ class CsuMasterDataRepository {
     final json = await compute(decodeCsuMasterDataArchive, bytes);
     final masterData = CsuMasterData.fromJson(json);
     await _cache.write(bytes);
-    return masterData;
+    return CsuMasterDataSnapshot(
+      data: masterData,
+      synchronizedAt: await _cache.lastSynchronizedAt(),
+      isFromCache: false,
+    );
   }
+}
+
+class CsuMasterDataSnapshot {
+  const CsuMasterDataSnapshot({
+    required this.data,
+    required this.synchronizedAt,
+    required this.isFromCache,
+  });
+
+  final CsuMasterData data;
+  final DateTime? synchronizedAt;
+  final bool isFromCache;
 }
 
 /// Isolate entry point for ZIP extraction and JSON decoding.

@@ -320,6 +320,18 @@ const frenchUiTranslations = <String, String>{
   'Tell us about yourself': 'Parlez-nous de vous',
   'Save Changes': 'Enregistrer les modifications',
   'Insuree Verification & Policy': 'Vérification de l’assuré et de la police',
+  'Scan insuree QR code': 'Scanner le code QR de l’assuré',
+  'Toggle torch': 'Activer ou désactiver la lampe',
+  'Switch camera': 'Changer de caméra',
+  'Export claims': 'Exporter les prestations',
+  'Export XML': 'Exporter XML',
+  'Protected openIMIS claim archive':
+      'Archive protégée des prestations openIMIS',
+  'Cheque number': 'Numéro de chèque',
+  'Invalid program code': 'Code de programme invalide',
+  'Invalid diagnosis code': 'Code de diagnostic invalide',
+  'One or more selected claim payloads are missing.':
+      'Une ou plusieurs prestations sélectionnées ne contiennent pas leurs données.',
   'CHF ID / Card Number': 'Identifiant CHF / numéro de carte',
   'Enter CHF ID': 'Saisissez l’identifiant CHF',
   'Verify': 'Vérifier',
@@ -347,6 +359,14 @@ const frenchUiTranslations = <String, String>{
   'Complete all family member fields.':
       'Remplissez tous les champs du membre de la famille.',
   'Add Member': 'Ajouter le membre',
+  'Edit HIV beneficiary': 'Modifier le bénéficiaire VIH',
+  'Find beneficiary': 'Rechercher le bénéficiaire',
+  'TARV / MPI number': 'Numéro TARV / MPI',
+  'A valid MPI/CHFID is required.': 'Un MPI/CHFID valide est requis.',
+  'An HIV beneficiary MPI cannot contain only numbers.':
+      'Le MPI d’un bénéficiaire VIH ne peut pas contenir uniquement des chiffres.',
+  'Beneficiary changes saved offline and ready to synchronize.':
+      'Les modifications du bénéficiaire ont été enregistrées hors ligne et sont prêtes à être synchronisées.',
   'Family & Insuree Enrolment': 'Inscription des familles et des assurés',
   'Search family by head name, card number, village...':
       'Rechercher par chef de famille, numéro de carte ou village…',
@@ -399,6 +419,8 @@ const frenchUiTranslations = <String, String>{
   'Oops!': 'Oups !',
   'Something went wrong. Please try again.':
       'Une erreur est survenue. Veuillez réessayer.',
+  'An error occurred on the server. Please try the action again.':
+      "une erreur est survenue sur le serveur, merci de bien vouloir reprendre l'action.",
   'Success': 'Succès',
   'Error': 'Erreur',
   'Warning': 'Avertissement',

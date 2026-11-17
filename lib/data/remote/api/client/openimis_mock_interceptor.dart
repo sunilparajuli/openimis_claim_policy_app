@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -17,6 +20,126 @@ class OpenImisMockInterceptor implements Interceptor {
     // Only intercept openIMIS domain endpoints when not connected to a live openIMIS server
     if (!isDemoEnvironment) {
       return handler.next(options);
+    }
+
+    if (path.contains('api/tools/extracts/download_master_data')) {
+      final masterData = {
+        'confirmationTypes': <Object>[],
+        'controls': [
+          {
+            'mobileCapabilities': ['claims', 'policiesCsu', 'policiesHiv'],
+          },
+        ],
+        'education': <Object>[],
+        'familyTypes': [
+          {'FamilyTypeCode': 'N', 'FamilyType': 'Nuclear'},
+          {'FamilyTypeCode': 'E', 'FamilyType': 'Extended'},
+        ],
+        'hf': [
+          {'code': 'RAHOS001', 'name': 'Rapta District Hospital'},
+        ],
+        'identificationTypes': <Object>[],
+        'languages': [
+          {'code': 'fr', 'name': 'Français'},
+          {'code': 'en', 'name': 'English'},
+        ],
+        'locations': [
+          {
+            'LocationId': 101,
+            'LocationCode': 'DEMO-V',
+            'LocationName': 'Demo Village',
+            'LocationType': 'V',
+          },
+        ],
+        'officers': [
+          {
+            'OfficerID': 201,
+            'Code': 'DEMO-OFFICER',
+            'LastName': 'Officer',
+            'OtherNames': 'Demo',
+            'LocationId': 101,
+          },
+        ],
+        'payers': <Object>[],
+        'products': [
+          {
+            'ProdID': 301,
+            'code': 'CSU',
+            'name': 'Couverture Santé Universelle',
+            'program': 'CSU',
+            'minAge': 0,
+            'maxAge': 0,
+          },
+          {
+            'ProdID': 302,
+            'code': 'CCS',
+            'name': 'Chèque Santé',
+            'program': 'CCS',
+            'minAge': 0,
+            'maxAge': 46,
+          },
+          {
+            'ProdID': 303,
+            'code': 'VIH',
+            'name': 'Programme VIH',
+            'program': 'VIH',
+            'minAge': 0,
+            'maxAge': 0,
+          },
+        ],
+        'professions': <Object>[],
+        'relations': <Object>[],
+        'phoneDefaults': <Object>[],
+        'genders': [
+          {'code': 'M', 'name': 'Male'},
+          {'code': 'F', 'name': 'Female'},
+        ],
+        'programs': [
+          {'code': 'CSU', 'name': 'CSU'},
+          {'code': 'CCS', 'name': 'Chèque Santé'},
+          {'code': 'VIH', 'name': 'VIH'},
+        ],
+        'cheques': [
+          {
+            'idChequeImportLine': 401,
+            'chequeImportLineCode': 'CC240524',
+            'chequeImportLineStatus': 'New',
+          },
+        ],
+        'ModuleConfiguration': [
+          {
+            'key': 'mpiMinLength',
+            'value': 12,
+            'layer': 'fe',
+            'is_exposed': true,
+          },
+          {
+            'key': 'mpiMaxLength',
+            'value': 20,
+            'layer': 'fe',
+            'is_exposed': true,
+          },
+          {
+            'key': 'chequeMinLength',
+            'value': 6,
+            'layer': 'fe',
+            'is_exposed': true,
+          },
+        ],
+      };
+      final archive = Archive()
+        ..addFile(ArchiveFile.string('MasterData.txt', jsonEncode(masterData)));
+      final bytes = ZipEncoder().encode(archive);
+      return handler.resolve(
+        Response<List<int>>(
+          requestOptions: options,
+          statusCode: 200,
+          data: bytes,
+          headers: Headers.fromMap({
+            Headers.contentTypeHeader: ['application/zip'],
+          }),
+        ),
+      );
     }
 
     if (path.contains('api_fhir_r4/login')) {
@@ -195,6 +318,191 @@ class OpenImisMockInterceptor implements Interceptor {
       final document = options.data is Map
           ? (options.data as Map)['query']?.toString() ?? ''
           : '';
+      if (document.contains('ClaimDiagnoses')) {
+        return handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: {
+              'data': {
+                'diagnoses': {
+                  'edges': [
+                    {
+                      'node': {
+                        'id': '101',
+                        'code': 'A09',
+                        'name': 'Infectious gastroenteritis and colitis',
+                      },
+                    },
+                    {
+                      'node': {
+                        'id': '102',
+                        'code': 'B50.9',
+                        'name': 'Plasmodium falciparum malaria',
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          ),
+        );
+      }
+      if (document.contains('ClaimInsuree')) {
+        final variables = options.data is Map
+            ? (options.data as Map)['variables'] as Map?
+            : null;
+        final chfId = variables?['chfId']?.toString() ?? '';
+        return handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: {
+              'data': {
+                'insurees': {
+                  'edges': [
+                    {
+                      'node': {'id': '501', 'chfId': chfId},
+                    },
+                  ],
+                },
+              },
+            },
+          ),
+        );
+      }
+      if (document.contains('ClaimEligibleCatalog')) {
+        return handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: {
+              'data': {
+                'medicalServices': {
+                  'edges': [
+                    {
+                      'node': {
+                        'id': '1001',
+                        'code': 'A1',
+                        'name': 'Consultation',
+                        'price': 999,
+                        'program': {'code': 'CSU'},
+                        'healthFacility': {'id': '31', 'code': 'RAHOS001'},
+                      },
+                    },
+                    {
+                      'node': {
+                        'id': '99001',
+                        'code': 'SHARED-CCS',
+                        'name': 'Shared Chèque Santé service',
+                        'price': 25,
+                        'program': {'code': 'CCS'},
+                        'healthFacility': null,
+                      },
+                    },
+                  ],
+                },
+                'medicalItems': {
+                  'edges': [
+                    {
+                      'node': {
+                        'id': '2001',
+                        'code': '0176',
+                        'name': 'Oral Rehydration Salts',
+                        'price': 999,
+                        'program': {'code': 'CSU'},
+                        'healthFacility': {'id': '31', 'code': 'RAHOS001'},
+                      },
+                    },
+                    {
+                      'node': {
+                        'id': '99002',
+                        'code': 'SHARED-ITEM-CCS',
+                        'name': 'Shared Chèque Santé item',
+                        'price': 3,
+                        'program': {'code': 'CCS'},
+                        'healthFacility': null,
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          ),
+        );
+      }
+      if (document.contains('CreateMobileClaim')) {
+        return handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: {
+              'data': {
+                'createClaim': {
+                  'clientMutationId': 'demo-claim',
+                  'internalId': 1,
+                },
+              },
+            },
+          ),
+        );
+      }
+      if (document.contains('MobileClaimMutationStatus')) {
+        return handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: {
+              'data': {
+                'mutationLogs': {
+                  'edges': [
+                    {
+                      'node': {'status': 2, 'error': null},
+                    },
+                  ],
+                },
+              },
+            },
+          ),
+        );
+      }
+      if (document.contains('ClaimPrograms')) {
+        return handler.resolve(
+          Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: 200,
+            data: {
+              'data': {
+                'program': {
+                  'edges': [
+                    {
+                      'node': {
+                        'idProgram': '1',
+                        'code': 'CSU',
+                        'nameProgram': 'CSU',
+                      },
+                    },
+                    {
+                      'node': {
+                        'idProgram': '2',
+                        'code': 'CCS',
+                        'nameProgram': 'Chèque Santé',
+                      },
+                    },
+                    {
+                      'node': {
+                        'idProgram': '3',
+                        'code': 'VIH',
+                        'nameProgram': 'VIH',
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          ),
+        );
+      }
       if (document.contains('ClaimMobileSetup')) {
         final variables = options.data is Map
             ? (options.data as Map)['variables'] as Map?
@@ -210,8 +518,10 @@ class OpenImisMockInterceptor implements Interceptor {
                   'edges': [
                     {
                       'node': {
+                        'id': '41',
                         'code': code,
                         'healthFacility': {
+                          'id': '31',
                           'code': 'RAHOS001',
                           'name': 'Rapta District Hospital',
                           'servicesPricelist': {
@@ -219,16 +529,19 @@ class OpenImisMockInterceptor implements Interceptor {
                               'edges': List.generate(30000, (index) {
                                 final service = switch (index) {
                                   0 => {
+                                    'id': '1001',
                                     'code': 'A1',
                                     'name': 'Consultation',
                                     'price': 15.0,
                                   },
                                   1 => {
+                                    'id': '1002',
                                     'code': 'LAB01',
                                     'name': 'Blood Analysis',
                                     'price': 8.0,
                                   },
                                   _ => {
+                                    'id': '${1000 + index}',
                                     'code':
                                         'SRV-${index.toString().padLeft(5, '0')}',
                                     'name': 'Medical service $index',
@@ -246,16 +559,19 @@ class OpenImisMockInterceptor implements Interceptor {
                               'edges': List.generate(30000, (index) {
                                 final item = switch (index) {
                                   0 => {
+                                    'id': '2001',
                                     'code': '0176',
                                     'name': 'Oral Rehydration Salts',
                                     'price': 2.5,
                                   },
                                   1 => {
+                                    'id': '2002',
                                     'code': 'PAR500',
                                     'name': 'Paracetamol 500mg',
                                     'price': 1.0,
                                   },
                                   _ => {
+                                    'id': '${2000 + index}',
                                     'code':
                                         'ITM-${index.toString().padLeft(5, '0')}',
                                     'name': 'Medical item $index',

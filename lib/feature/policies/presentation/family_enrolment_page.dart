@@ -4,8 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
 import 'package:openimis_claim_policy_app/core/utils/insuree_number.dart';
 import 'package:openimis_claim_policy_app/feature/insuree/presentation/insuree_enquiry_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/models/policy_enrollment.dart';
+import 'package:openimis_claim_policy_app/feature/policies/models/offline_insuree_update.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/hiv_insuree_edit_form.dart';
+import 'package:openimis_claim_policy_app/feature/policies/presentation/policy_enrollment_form.dart';
 import 'package:openimis_claim_policy_app/feature/policies/presentation/policy_renewal_page.dart';
+import 'package:openimis_claim_policy_app/feature/policies/repositories/offline_policy_enrollment_repository.dart';
+import 'package:openimis_claim_policy_app/feature/policies/repositories/policy_enrollment_repository.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/csu_input_limits_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/csu_master_data_provider.dart';
+import 'package:openimis_claim_policy_app/core/monitoring/error_reporting.dart';
 
 class FamilyMember {
   final String fullName;
@@ -23,8 +32,17 @@ class FamilyMember {
   });
 }
 
+FamilyMember _familyMemberFromDraft(PolicyInsureeDraft draft) => FamilyMember(
+  fullName: '${draft.otherNames} ${draft.lastName}'.trim(),
+  relation: draft.relationshipId?.toString() ?? '',
+  gender: draft.genderId,
+  dob: draft.dateOfBirth.toIso8601String().substring(0, 10),
+  chfId: draft.chfId,
+);
+
 class FamilyRecord {
   final int id;
+  final String enrollmentId;
   final String headName;
   final String headChfId;
   final String region;
@@ -40,6 +58,7 @@ class FamilyRecord {
 
   const FamilyRecord({
     required this.id,
+    required this.enrollmentId,
     required this.headName,
     required this.headChfId,
     required this.region,
@@ -56,7 +75,12 @@ class FamilyRecord {
 }
 
 class FamilyEnrolmentPage extends ConsumerStatefulWidget {
-  const FamilyEnrolmentPage({super.key});
+  const FamilyEnrolmentPage({
+    this.application = PolicyApplication.csu,
+    super.key,
+  });
+
+  final PolicyApplication application;
 
   @override
   ConsumerState<FamilyEnrolmentPage> createState() =>
@@ -66,8 +90,20 @@ class FamilyEnrolmentPage extends ConsumerStatefulWidget {
 class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  bool _syncing = false;
 
   final List<FamilyRecord> _families = [];
+
+  @override
+  void initState() {
+    super.initState();
+    ErrorReporting.setWorkflow(
+      widget.application == PolicyApplication.hiv
+          ? AppWorkflow.policiesHiv
+          : AppWorkflow.policiesCsu,
+    );
+    Future.microtask(_reloadPending);
+  }
 
   @override
   void dispose() {
@@ -75,149 +111,195 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
     super.dispose();
   }
 
-  void _showNewFamilyDialog() {
-    final headController = TextEditingController();
-    final phoneController = TextEditingController();
-    String selectedRegion = 'Central';
-    String selectedPoverty = 'Non-Poor';
-    String selectedFamilyType = 'Nuclear';
-
-    showAppBottomSheet(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setModalState) => AppSheetContent(
-          title: Text(context.tr('New Household Enrolment')),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AppTextField(
-                  controller: headController,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Head of Household Name'),
-                    prefixIcon: const Icon(Icons.person),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Phone Number (SMS confirmation)'),
-                    prefixIcon: const Icon(Icons.phone),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                AppDropdownField<String>(
-                  value: selectedRegion,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Region'),
-                    prefixIcon: const Icon(Icons.map),
-                  ),
-                  items:
-                      const [
-                            'Central',
-                            'Rift Valley',
-                            'Coast',
-                            'Western',
-                            'Eastern',
-                          ]
-                          .map(
-                            (r) => DropdownMenuItem(value: r, child: Text(r)),
-                          )
-                          .toList(),
-                  onChanged: (val) =>
-                      setModalState(() => selectedRegion = val!),
-                ),
-                const SizedBox(height: 12),
-                AppDropdownField<String>(
-                  value: selectedPoverty,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Poverty Status'),
-                    prefixIcon: const Icon(Icons.monetization_on_outlined),
-                  ),
-                  items: const ['Non-Poor', 'Poor', 'Indigent / Subsidized']
-                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                      .toList(),
-                  onChanged: (val) =>
-                      setModalState(() => selectedPoverty = val!),
-                ),
-                const SizedBox(height: 12),
-                AppDropdownField<String>(
-                  value: selectedFamilyType,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Family Type'),
-                    prefixIcon: const Icon(Icons.group),
-                  ),
-                  items: const ['Nuclear', 'Extended']
-                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                      .toList(),
-                  onChanged: (val) =>
-                      setModalState(() => selectedFamilyType = val!),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            AppButton(
-              variant: AppButtonVariant.text,
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(context.tr('Cancel')),
-            ),
-            AppButton(
-              variant: AppButtonVariant.primary,
-              onPressed: () {
-                if (headController.text.trim().isEmpty) return;
-                final randomId = DateTime.now().millisecondsSinceEpoch % 100000;
-                final newChfId = 'CHF-$randomId';
-                final newFamily = FamilyRecord(
-                  id: _families.length + 1,
-                  headName: headController.text.trim(),
-                  headChfId: newChfId,
-                  region: selectedRegion,
-                  district: '$selectedRegion Central',
-                  ward: 'Ward 1',
-                  village: 'Village Center',
-                  povertyStatus: selectedPoverty,
-                  familyType: selectedFamilyType,
-                  policyStatus: 'Active',
-                  planName: 'Universal Health Coverage Plan',
-                  policyExpiry: '2027-12-31',
+  Future<void> _reloadPending() async {
+    final records = await ref
+        .read(offlinePolicyEnrollmentRepositoryProvider)
+        .pending();
+    if (!mounted) return;
+    setState(() {
+      _families
+        ..clear()
+        ..addAll(
+          records
+              .where(
+                (record) =>
+                    record.enrollment.family.application == widget.application,
+              )
+              .map((record) {
+                final enrollment = record.enrollment;
+                final head = enrollment.family.head;
+                final policy = enrollment.policies.firstOrNull;
+                return FamilyRecord(
+                  id: enrollment.id.hashCode,
+                  enrollmentId: enrollment.id,
+                  headName: '${head.otherNames} ${head.lastName}'.trim(),
+                  headChfId: head.chfId,
+                  region: '',
+                  district: '',
+                  ward: '',
+                  village: '',
+                  povertyStatus: enrollment.family.poverty
+                      ? 'Poor'
+                      : 'Non-Poor',
+                  familyType: enrollment.family.familyTypeId ?? '',
+                  policyStatus: record.status,
+                  planName: widget.application == PolicyApplication.hiv
+                      ? 'HIV'
+                      : 'CSU',
+                  policyExpiry: policy == null
+                      ? ''
+                      : policy.expiryDate.toIso8601String().substring(0, 10),
                   members: [
                     FamilyMember(
-                      fullName: headController.text.trim(),
+                      fullName: '${head.otherNames} ${head.lastName}'.trim(),
                       relation: 'Head of Family',
-                      gender: 'Male',
-                      dob: '1988-01-01',
-                      chfId: newChfId,
+                      gender: head.genderId,
+                      dob: head.dateOfBirth.toIso8601String().substring(0, 10),
+                      chfId: head.chfId,
                     ),
+                    ...enrollment.members.map(_familyMemberFromDraft),
                   ],
                 );
-                setState(() => _families.insert(0, newFamily));
-                Navigator.pop(ctx);
-                showAppFeedbackDialog(
-                  context: context,
-                  type: AppFeedbackType.success,
-                  message:
-                      'Family "${newFamily.headName}" enrolled with card $newChfId',
-                );
-              },
-              child: Text(context.tr('Enrol Family')),
+              }),
+        );
+    });
+  }
+
+  Future<void> _syncPending() async {
+    if (_syncing) return;
+    setState(() => _syncing = true);
+    final result = await ref
+        .read(offlinePolicyEnrollmentRepositoryProvider)
+        .synchronize();
+    await _reloadPending();
+    if (!mounted) return;
+    setState(() => _syncing = false);
+    showAppFeedbackDialog(
+      context: context,
+      type: result.failed == 0
+          ? AppFeedbackType.success
+          : AppFeedbackType.warning,
+      message:
+          '${result.synced} ${context.tr('synchronized')}, ${result.failed} ${context.tr('failed')}.',
+    );
+  }
+
+  Future<void> _showNewFamilyDialog() async {
+    final result = await showAppBottomSheet<PolicyEnrollmentFormResult>(
+      context: context,
+      heightFactor: 0.95,
+      builder: (_) => PolicyEnrollmentForm(application: widget.application),
+    );
+    if (result == null || !mounted) return;
+    final policyNumber = result.enrollment.policies.single.policyNumber;
+    if (policyNumber != null &&
+        await ref
+            .read(offlinePolicyEnrollmentRepositoryProvider)
+            .isChequeQueued(policyNumber)) {
+      if (!mounted) return;
+      showAppFeedbackDialog(
+        context: context,
+        type: AppFeedbackType.warning,
+        message: 'Chèque $policyNumber déjà utilisé',
+      );
+      return;
+    }
+    try {
+      await ref
+          .read(policyEnrollmentRepositoryProvider)
+          .familyForHead(result.enrollment.family.head.chfId);
+      if (!mounted) return;
+      showAppFeedbackDialog(
+        context: context,
+        type: AppFeedbackType.warning,
+        message: context.tr(
+          'This MPI already belongs to a family. Re-enter the MPI.',
+        ),
+      );
+      return;
+    } on FormatException {
+      // Expected for a new family. Network failures are handled below by the
+      // offline queue, so field work is not blocked by connectivity.
+    } catch (_) {
+      // The authoritative duplicate check is repeated during synchronization.
+    }
+    await ref
+        .read(offlinePolicyEnrollmentRepositoryProvider)
+        .save(result.enrollment);
+    if (!mounted) return;
+    final head = result.enrollment.family.head;
+    final policy = result.enrollment.policies.single;
+    setState(() {
+      _families.insert(
+        0,
+        FamilyRecord(
+          id: _families.length + 1,
+          enrollmentId: result.enrollment.id,
+          headName: result.headName,
+          headChfId: head.chfId,
+          region: result.locationName,
+          district: result.locationName,
+          ward: '',
+          village: result.locationName,
+          povertyStatus: result.enrollment.family.poverty ? 'Poor' : 'Non-Poor',
+          familyType: result.enrollment.family.familyTypeId ?? '',
+          policyStatus: 'Pending sync',
+          planName: result.productName,
+          policyExpiry: policy.expiryDate.toIso8601String().substring(0, 10),
+          members: [
+            FamilyMember(
+              fullName: result.headName,
+              relation: 'Head of Family',
+              gender: head.genderId,
+              dob: head.dateOfBirth.toIso8601String().substring(0, 10),
+              chfId: head.chfId,
             ),
           ],
         ),
+      );
+    });
+    showAppFeedbackDialog(
+      context: context,
+      type: AppFeedbackType.success,
+      message: context.tr(
+        'Enrolment saved offline and is ready to synchronize.',
       ),
     );
   }
 
-  Future<FamilyMember?> _showAddFamilyMemberDialog() async {
-    final nameController = TextEditingController();
+  Future<void> _showEditHivInsureeDialog() async {
+    final update = await showAppBottomSheet<OfflineInsureeUpdate>(
+      context: context,
+      heightFactor: 0.8,
+      builder: (_) => const HivInsureeEditForm(),
+    );
+    if (update == null || !mounted) return;
+    await ref
+        .read(offlinePolicyEnrollmentRepositoryProvider)
+        .saveInsureeUpdate(update);
+    if (!mounted) return;
+    showAppFeedbackDialog(
+      context: context,
+      type: AppFeedbackType.success,
+      message: context.tr(
+        'Beneficiary changes saved offline and ready to synchronize.',
+      ),
+    );
+  }
+
+  Future<PolicyInsureeDraft?> _showAddFamilyMemberDialog() async {
+    final lastNameController = TextEditingController();
+    final otherNamesController = TextEditingController();
     final chfIdController = TextEditingController();
-    String? relationship;
+    int? relationshipId;
     String? gender;
     DateTime? dateOfBirth;
+    final masterData = ref.read(csuMasterDataProvider).value?.data;
+    final relations = masterData?.records('relations') ?? const [];
+    final genders = masterData?.records('genders') ?? const [];
+    final limits = ref.read(csuInputLimitsProvider);
 
-    final member = await showAppBottomSheet<FamilyMember>(
+    final member = await showAppBottomSheet<PolicyInsureeDraft>(
       context: context,
       heightFactor: 0.9,
       builder: (sheetContext) => StatefulBuilder(
@@ -238,9 +320,17 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               AppTextField(
-                controller: nameController,
+                controller: lastNameController,
                 decoration: InputDecoration(
-                  labelText: context.tr('Full Name'),
+                  labelText: context.tr('Last name'),
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                controller: otherNamesController,
+                decoration: InputDecoration(
+                  labelText: context.tr('Other names'),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
               ),
@@ -253,31 +343,23 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              AppDropdownField<String>(
-                value: relationship,
+              AppDropdownField<int>(
+                value: relationshipId,
                 decoration: InputDecoration(
                   labelText: context.tr('Relationship'),
                   prefixIcon: const Icon(Icons.family_restroom_outlined),
                 ),
-                items: [
-                  DropdownMenuItem(
-                    value: 'Spouse',
-                    child: Text(context.tr('Spouse')),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Child',
-                    child: Text(context.tr('Child')),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Parent / Dependent',
-                    child: Text(context.tr('Parent / Dependent')),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Other',
-                    child: Text(context.tr('Other')),
-                  ),
-                ],
-                onChanged: (value) => setModalState(() => relationship = value),
+                items: relations
+                    .where((record) => record.id != null)
+                    .map(
+                      (record) => DropdownMenuItem(
+                        value: record.id,
+                        child: Text(record.name ?? record.id.toString()),
+                      ),
+                    )
+                    .toList(growable: false),
+                onChanged: (value) =>
+                    setModalState(() => relationshipId = value),
               ),
               const SizedBox(height: 12),
               AppDropdownField<String>(
@@ -286,20 +368,15 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                   labelText: context.tr('Gender'),
                   prefixIcon: Icon(Icons.wc_outlined),
                 ),
-                items: [
-                  DropdownMenuItem(
-                    value: 'Male',
-                    child: Text(context.tr('Male')),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Female',
-                    child: Text(context.tr('Female')),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Other',
-                    child: Text(context.tr('Other')),
-                  ),
-                ],
+                items: genders
+                    .where((record) => record.code != null)
+                    .map(
+                      (record) => DropdownMenuItem(
+                        value: record.code,
+                        child: Text(record.name ?? record.code!),
+                      ),
+                    )
+                    .toList(growable: false),
                 onChanged: (value) => setModalState(() => gender = value),
               ),
               const SizedBox(height: 12),
@@ -326,9 +403,12 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                 final insureeNumberIssue = InsureeNumber.validate(
                   normalizedChfId,
                 );
-                if (nameController.text.trim().isEmpty ||
+                final lengthIssue = limits.validateMpi(normalizedChfId);
+                if (lastNameController.text.trim().isEmpty ||
+                    otherNamesController.text.trim().isEmpty ||
                     insureeNumberIssue != null ||
-                    relationship == null ||
+                    lengthIssue != null ||
+                    relationshipId == null ||
                     gender == null ||
                     dateOfBirth == null) {
                   showAppFeedbackDialog(
@@ -340,18 +420,20 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                         ? context.tr(
                             'Insurance Number contains invisible characters',
                           )
-                        : context.tr('Complete all family member fields.'),
+                        : lengthIssue ??
+                              context.tr('Complete all family member fields.'),
                   );
                   return;
                 }
                 Navigator.pop(
                   sheetContext,
-                  FamilyMember(
-                    fullName: nameController.text.trim(),
-                    relation: relationship!,
-                    gender: gender!,
-                    dob: dateOfBirth!.toIso8601String().substring(0, 10),
+                  PolicyInsureeDraft(
                     chfId: normalizedChfId,
+                    lastName: lastNameController.text.trim(),
+                    otherNames: otherNamesController.text.trim(),
+                    genderId: gender!,
+                    dateOfBirth: dateOfBirth!,
+                    relationshipId: relationshipId,
                   ),
                 );
               },
@@ -363,7 +445,8 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
       ),
     );
 
-    nameController.dispose();
+    lastNameController.dispose();
+    otherNamesController.dispose();
     chfIdController.dispose();
     return member;
   }
@@ -494,14 +577,37 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
                             onPressed: () async {
                               final member = await _showAddFamilyMemberDialog();
                               if (member == null || !mounted) return;
-                              setState(() => family.members.add(member));
-                              setSheetState(() {});
-                              showAppFeedbackDialog(
-                                context: this.context,
-                                type: AppFeedbackType.success,
-                                message:
-                                    '${member.fullName} added to the family.',
-                              );
+                              try {
+                                await ref
+                                    .read(
+                                      offlinePolicyEnrollmentRepositoryProvider,
+                                    )
+                                    .addMember(family.enrollmentId, member);
+                                final displayMember = _familyMemberFromDraft(
+                                  member,
+                                );
+                                if (!mounted) return;
+                                setState(
+                                  () => family.members.add(displayMember),
+                                );
+                                setSheetState(() {});
+                                showAppFeedbackDialog(
+                                  context: this.context,
+                                  type: AppFeedbackType.success,
+                                  message:
+                                      '${displayMember.fullName} added to the family.',
+                                );
+                              } catch (error) {
+                                if (!mounted) return;
+                                showAppFeedbackDialog(
+                                  context: this.context,
+                                  type: AppFeedbackType.warning,
+                                  message: error.toString().replaceFirst(
+                                    'FormatException: ',
+                                    '',
+                                  ),
+                                );
+                              }
                             },
                             icon: const Icon(Icons.person_add),
                             label: Text(
@@ -624,7 +730,31 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
     }).toList();
 
     return Scaffold(
-      appBar: AppAppBar(title: Text(context.tr('Family & Insuree Enrolment'))),
+      appBar: AppAppBar(
+        title: Text(
+          widget.application == PolicyApplication.hiv
+              ? context.tr('HIV Enrolment')
+              : context.tr('CSU Family Enrolment'),
+        ),
+        actions: [
+          if (widget.application == PolicyApplication.hiv)
+            IconButton(
+              tooltip: context.tr('Edit HIV beneficiary'),
+              onPressed: _showEditHivInsureeDialog,
+              icon: const Icon(Icons.manage_accounts_outlined),
+            ),
+          IconButton(
+            tooltip: context.tr('Synchronize'),
+            onPressed: _syncing ? null : _syncPending,
+            icon: _syncing
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(

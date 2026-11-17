@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/claims/presentation/claim_wizard_page.dart';
 import 'package:openimis_claim_policy_app/feature/insuree/models/insuree_model.dart';
 import 'package:openimis_claim_policy_app/feature/insuree/repositories/insuree_repository.dart';
+import 'package:openimis_claim_policy_app/feature/insuree/presentation/insuree_qr_scanner_page.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
+import 'package:openimis_claim_policy_app/core/monitoring/error_reporting.dart';
 
 class InsureeEnquiryPage extends ConsumerStatefulWidget {
   const InsureeEnquiryPage({super.key});
@@ -23,6 +25,12 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
   String? _errorMessage;
 
   MoneyFormatter get _money => ref.read(moneyFormatterProvider);
+
+  @override
+  void initState() {
+    super.initState();
+    ErrorReporting.setWorkflow(AppWorkflow.enquire);
+  }
 
   @override
   void dispose() {
@@ -67,6 +75,19 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _scanInsuree() async {
+    final mpi = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const InsureeQrScannerPage()),
+    );
+    if (mpi == null || !mounted) return;
+    _chfIdController.value = TextEditingValue(
+      text: mpi,
+      selection: TextSelection.collapsed(offset: mpi.length),
+    );
+    await _searchInsuree();
   }
 
   @override
@@ -120,6 +141,12 @@ class _InsureeEnquiryPageState extends ConsumerState<InsureeEnquiryPage> {
                             ),
                             onSubmitted: (_) => _searchInsuree(),
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton.filledTonal(
+                          tooltip: context.tr('Scan insuree QR code'),
+                          onPressed: _isLoading ? null : _scanInsuree,
+                          icon: const Icon(Icons.qr_code_scanner_rounded),
                         ),
                         const SizedBox(width: 8),
                         AppButton(

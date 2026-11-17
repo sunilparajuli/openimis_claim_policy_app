@@ -28,6 +28,9 @@ enum ApiErrorType {
   unknown,
 }
 
+const serverActionErrorMessage =
+    'An error occurred on the server. Please try the action again.';
+
 /// Model class representing an API error
 class ApiError implements Exception {
   const ApiError({
@@ -52,7 +55,7 @@ class ApiError implements Exception {
       case ApiErrorType.timeout:
         return 'Request timed out. Please try again.';
       case ApiErrorType.server:
-        return 'Server error. Please try again later.';
+        return serverActionErrorMessage;
       case ApiErrorType.unauthorized:
         return 'Session expired. Please login again.';
       case ApiErrorType.forbidden:
