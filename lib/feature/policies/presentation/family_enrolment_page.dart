@@ -185,10 +185,11 @@ class _FamilyEnrolmentPageState extends ConsumerState<FamilyEnrolmentPage> {
   }
 
   Future<void> _showNewFamilyDialog() async {
-    final result = await showAppBottomSheet<PolicyEnrollmentFormResult>(
-      context: context,
-      heightFactor: 0.95,
-      builder: (_) => PolicyEnrollmentForm(application: widget.application),
+    final result = await Navigator.of(context).push<PolicyEnrollmentFormResult>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PolicyEnrollmentForm(application: widget.application),
+      ),
     );
     if (result == null || !mounted) return;
     final policyNumber = result.enrollment.policies.single.policyNumber;

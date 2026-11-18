@@ -72,17 +72,20 @@ class _PolicyEnrollmentFormState extends ConsumerState<PolicyEnrollmentForm> {
   Widget build(BuildContext context) {
     final snapshot = ref.watch(csuMasterDataProvider).value;
     if (snapshot == null) {
-      return AppSheetContent(
-        title: Text(context.tr('Master data required')),
-        content: Text(
-          context.tr('Synchronize master data before enrolling a beneficiary.'),
-        ),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            label: Text(context.tr('Close')),
+      return Scaffold(
+        appBar: AppAppBar(title: Text(context.tr('Master data required'))),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: AppEmptyState(
+              icon: Icons.cloud_off_outlined,
+              message: context.tr('Master data required'),
+              description: context.tr(
+                'Synchronize master data before enrolling a beneficiary.',
+              ),
+            ),
           ),
-        ],
+        ),
       );
     }
     final data = snapshot.data;
@@ -100,6 +103,9 @@ class _PolicyEnrollmentFormState extends ConsumerState<PolicyEnrollmentForm> {
     final selectedProduct = products
         .where((product) => product.id == _productId)
         .firstOrNull;
+    final pageTitle = widget.application == PolicyApplication.hiv
+        ? context.tr('New HIV beneficiary')
+        : context.tr('New CSU household');
 
     final theme = Theme.of(context);
     return Theme(
@@ -109,115 +115,70 @@ class _PolicyEnrollmentFormState extends ConsumerState<PolicyEnrollmentForm> {
           fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
             alpha: 0.55,
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          errorBorder: InputBorder.none,
-          focusedErrorBorder: InputBorder.none,
+          border: _fieldBorder,
+          enabledBorder: _fieldBorder,
+          focusedBorder: _fieldBorder,
+          errorBorder: _fieldBorder,
+          focusedErrorBorder: _fieldBorder,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 16,
           ),
         ),
       ),
-      child: AppSheetContent(
-        title: Text(
-          widget.application == PolicyApplication.hiv
-              ? context.tr('New HIV beneficiary')
-              : context.tr('New CSU household'),
-        ),
-        content: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AppTextField(
-                  controller: _mpi,
-                  decoration: InputDecoration(
-                    labelText: widget.application == PolicyApplication.hiv
-                        ? context.tr('TARV / MPI number')
-                        : context.tr('MPI / CHFID'),
-                    prefixIcon: const Icon(Icons.badge_outlined),
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.surface,
+        appBar: AppAppBar(title: Text(pageTitle)),
+        body: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _FormSectionHeader(
+                    icon: Icons.person_outline_rounded,
+                    title: context.tr('Household head'),
+                    subtitle: context.tr(
+                      'Identity and beneficiary information',
+                    ),
                   ),
-                  validator: _validateMpi,
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: _lastName,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Last name'),
+                  const SizedBox(height: 16),
+                  AppTextField(
+                    controller: _mpi,
+                    decoration: InputDecoration(
+                      labelText: widget.application == PolicyApplication.hiv
+                          ? context.tr('TARV / MPI number')
+                          : context.tr('MPI / CHFID'),
+                      prefixIcon: const Icon(Icons.badge_outlined),
+                    ),
+                    validator: _validateMpi,
                   ),
-                  validator: _required,
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: _otherNames,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Other names'),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _lastName,
+                    decoration: InputDecoration(
+                      labelText: context.tr('Last name'),
+                    ),
+                    validator: _required,
                   ),
-                  validator: _required,
-                ),
-                const SizedBox(height: 12),
-                AppDropdownField<String>(
-                  value: _gender,
-                  decoration: InputDecoration(labelText: context.tr('Gender')),
-                  items: genders
-                      .where((record) => record.code != null)
-                      .map(
-                        (record) => DropdownMenuItem(
-                          value: record.code,
-                          child: Text(record.name ?? record.code!),
-                        ),
-                      )
-                      .toList(growable: false),
-                  onChanged: (value) => setState(() => _gender = value),
-                ),
-                const SizedBox(height: 12),
-                AppDateField(
-                  labelText: context.tr('Date of Birth'),
-                  value: _dateOfBirth,
-                  firstDate: DateTime(1900),
-                  lastDate: DateTime.now(),
-                  onChanged: (value) => setState(() => _dateOfBirth = value),
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: _phone,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(labelText: context.tr('Phone')),
-                ),
-                const SizedBox(height: 12),
-                AppDropdownField<int>(
-                  value: _locationId,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Location'),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _otherNames,
+                    decoration: InputDecoration(
+                      labelText: context.tr('Other names'),
+                    ),
+                    validator: _required,
                   ),
-                  items: locations
-                      .map(
-                        (record) => DropdownMenuItem(
-                          value: record.id,
-                          child: Text(
-                            record.name ?? record.code ?? '${record.id}',
-                          ),
-                        ),
-                      )
-                      .toList(growable: false),
-                  onChanged: (value) => setState(() => _locationId = value),
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: _address,
-                  decoration: InputDecoration(labelText: context.tr('Address')),
-                ),
-                if (widget.application == PolicyApplication.csu) ...[
                   const SizedBox(height: 12),
                   AppDropdownField<String>(
-                    value: _familyType,
+                    value: _gender,
                     decoration: InputDecoration(
-                      labelText: context.tr('Family Type'),
+                      labelText: context.tr('Gender'),
                     ),
-                    items: familyTypes
+                    items: genders
                         .where((record) => record.code != null)
                         .map(
                           (record) => DropdownMenuItem(
@@ -226,125 +187,234 @@ class _PolicyEnrollmentFormState extends ConsumerState<PolicyEnrollmentForm> {
                           ),
                         )
                         .toList(growable: false),
-                    onChanged: (value) => setState(() => _familyType = value),
+                    onChanged: (value) => setState(() => _gender = value),
                   ),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(context.tr('Poor / subsidized household')),
-                    value: _poverty,
-                    onChanged: (value) => setState(() => _poverty = value),
-                  ),
-                ],
-                const Divider(height: 28),
-                AppDropdownField<int>(
-                  value: _productId,
-                  decoration: InputDecoration(labelText: context.tr('Product')),
-                  items: products
-                      .map(
-                        (product) => DropdownMenuItem(
-                          value: product.id,
-                          child: Text(product.name),
-                        ),
-                      )
-                      .toList(growable: false),
-                  onChanged: (value) => setState(() {
-                    _productId = value;
-                    _pregnancyWeek = null;
-                    _cheque.clear();
-                  }),
-                ),
-                const SizedBox(height: 12),
-                AppDropdownField<int>(
-                  value: _officerId,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Enrolment officer'),
-                  ),
-                  items: officers
-                      .map(
-                        (record) => DropdownMenuItem(
-                          value: record.id,
-                          child: Text(_officerName(record)),
-                        ),
-                      )
-                      .toList(growable: false),
-                  onChanged: (value) => setState(() => _officerId = value),
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: _value,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: context.tr('Policy value'),
-                  ),
-                  validator: (value) => num.tryParse(value ?? '') == null
-                      ? context.tr('Enter a valid policy value')
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                AppDateField(
-                  labelText: context.tr('Policy start date'),
-                  value: _startDate,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                  onChanged: (value) => setState(() => _startDate = value),
-                ),
-                const SizedBox(height: 12),
-                AppDateField(
-                  labelText: context.tr('Requested expiry date'),
-                  value: _expiryDate,
-                  firstDate: _startDate,
-                  lastDate: DateTime(2100),
-                  onChanged: (value) => setState(() => _expiryDate = value),
-                ),
-                if (selectedProduct?.isChequeSante == true) ...[
                   const SizedBox(height: 12),
+                  AppDateField(
+                    labelText: context.tr('Date of Birth'),
+                    value: _dateOfBirth,
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                    onChanged: (value) => setState(() => _dateOfBirth = value),
+                  ),
+                  const SizedBox(height: 24),
+                  _FormSectionHeader(
+                    icon: Icons.home_outlined,
+                    title: context.tr('Household details'),
+                    subtitle: context.tr('Contact and residence information'),
+                  ),
+                  const SizedBox(height: 16),
                   AppTextField(
-                    controller: _cheque,
-                    decoration: InputDecoration(
-                      labelText: context.tr('Cheque number'),
-                    ),
-                    validator: (value) => ref
-                        .read(csuInputLimitsProvider)
-                        .validateCheque(value?.trim() ?? ''),
+                    controller: _phone,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(labelText: context.tr('Phone')),
                   ),
                   const SizedBox(height: 12),
                   AppDropdownField<int>(
-                    value: _pregnancyWeek,
+                    value: _locationId,
                     decoration: InputDecoration(
-                      labelText: context.tr('Pregnancy week'),
+                      labelText: context.tr('Location'),
                     ),
-                    items: List.generate(
-                      42,
-                      (index) => DropdownMenuItem(
-                        value: index + 1,
-                        child: Text('${index + 1}'),
-                      ),
-                    ),
-                    onChanged: (value) =>
-                        setState(() => _pregnancyWeek = value),
+                    items: locations
+                        .map(
+                          (record) => DropdownMenuItem(
+                            value: record.id,
+                            child: Text(
+                              record.name ?? record.code ?? '${record.id}',
+                            ),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (value) => setState(() => _locationId = value),
                   ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _address,
+                    decoration: InputDecoration(
+                      labelText: context.tr('Address'),
+                    ),
+                  ),
+                  if (widget.application == PolicyApplication.csu) ...[
+                    const SizedBox(height: 12),
+                    AppDropdownField<String>(
+                      value: _familyType,
+                      decoration: InputDecoration(
+                        labelText: context.tr('Family Type'),
+                      ),
+                      items: familyTypes
+                          .where((record) => record.code != null)
+                          .map(
+                            (record) => DropdownMenuItem(
+                              value: record.code,
+                              child: Text(record.name ?? record.code!),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) => setState(() => _familyType = value),
+                    ),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(context.tr('Poor / subsidized household')),
+                      value: _poverty,
+                      onChanged: (value) => setState(() => _poverty = value),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  _FormSectionHeader(
+                    icon: Icons.health_and_safety_outlined,
+                    title: context.tr('Policy'),
+                    subtitle: context.tr('Product and coverage information'),
+                  ),
+                  const SizedBox(height: 16),
+                  AppDropdownField<int>(
+                    value: _productId,
+                    decoration: InputDecoration(
+                      labelText: context.tr('Product'),
+                    ),
+                    items: products
+                        .map(
+                          (product) => DropdownMenuItem(
+                            value: product.id,
+                            child: Text(product.name),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (value) => setState(() {
+                      _productId = value;
+                      _pregnancyWeek = null;
+                      _cheque.clear();
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  AppDropdownField<int>(
+                    value: _officerId,
+                    decoration: InputDecoration(
+                      labelText: context.tr('Enrolment officer'),
+                    ),
+                    items: officers
+                        .map(
+                          (record) => DropdownMenuItem(
+                            value: record.id,
+                            child: Text(_officerName(record)),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (value) => setState(() => _officerId = value),
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _value,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Policy value'),
+                    ),
+                    validator: (value) => num.tryParse(value ?? '') == null
+                        ? context.tr('Enter a valid policy value')
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  AppDateField(
+                    labelText: context.tr('Policy start date'),
+                    value: _startDate,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    onChanged: (value) => setState(() => _startDate = value),
+                  ),
+                  const SizedBox(height: 12),
+                  AppDateField(
+                    labelText: context.tr('Requested expiry date'),
+                    value: _expiryDate,
+                    firstDate: _startDate,
+                    lastDate: DateTime(2100),
+                    onChanged: (value) => setState(() => _expiryDate = value),
+                  ),
+                  if (selectedProduct?.isChequeSante == true) ...[
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: _cheque,
+                      decoration: InputDecoration(
+                        labelText: context.tr('Cheque number'),
+                      ),
+                      validator: (value) => ref
+                          .read(csuInputLimitsProvider)
+                          .validateCheque(value?.trim() ?? ''),
+                    ),
+                    const SizedBox(height: 12),
+                    AppDropdownField<int>(
+                      value: _pregnancyWeek,
+                      decoration: InputDecoration(
+                        labelText: context.tr('Pregnancy week'),
+                      ),
+                      items: List.generate(
+                        42,
+                        (index) => DropdownMenuItem(
+                          value: index + 1,
+                          child: Text('${index + 1}'),
+                        ),
+                      ),
+                      onChanged: (value) =>
+                          setState(() => _pregnancyWeek = value),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
-        actions: [
-          AppButton(
-            variant: AppButtonVariant.text,
-            onPressed: () => Navigator.pop(context),
-            label: Text(context.tr('Cancel')),
+        bottomNavigationBar: AnimatedPadding(
+          duration: const Duration(milliseconds: 180),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
           ),
-          AppButton(
-            onPressed: () => _submit(data, products, locations),
-            icon: const Icon(Icons.save_outlined),
-            label: Text(context.tr('Save offline')),
+          child: SafeArea(
+            top: false,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 16,
+                    offset: Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        variant: AppButtonVariant.secondary,
+                        onPressed: () => Navigator.pop(context),
+                        label: Text(context.tr('Cancel')),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: AppButton(
+                        onPressed: () => _submit(data, products, locations),
+                        icon: const Icon(Icons.save_outlined),
+                        label: Text(context.tr('Save offline')),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
+
+  static const _fieldBorder = OutlineInputBorder(
+    borderRadius: BorderRadius.all(Radius.circular(14)),
+    borderSide: BorderSide.none,
+  );
 
   List<PolicyProduct> _products(CsuMasterData data) {
     final result = <PolicyProduct>[];
@@ -483,4 +553,57 @@ class _PolicyEnrollmentFormState extends ConsumerState<PolicyEnrollmentForm> {
     ].whereType<Object>().map((value) => value.toString()).join(' ').trim();
     return names.isNotEmpty ? names : record.code ?? '${record.id}';
   }
+}
+
+class _FormSectionHeader extends StatelessWidget {
+  const _FormSectionHeader({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          size: 21,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
 }

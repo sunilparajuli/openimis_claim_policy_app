@@ -175,7 +175,7 @@ void main() {
       expect(find.text('Enrol Family'), findsOneWidget);
       expect(find.text('No enrolled families available'), findsOneWidget);
 
-      // Tap to open household enrolment modal
+      // Tap to open the dedicated household enrolment page.
       await tester.tap(find.text('Enrol Family'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -184,7 +184,7 @@ void main() {
       expect(find.text('MPI / CHFID'), findsOneWidget);
     });
 
-    testWidgets('Policy enrolment sheet scrolls above the keyboard', (
+    testWidgets('Policy enrolment page keeps actions above the keyboard', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390, 844);
