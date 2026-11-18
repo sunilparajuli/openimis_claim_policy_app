@@ -9,6 +9,7 @@ import 'package:openimis_claim_policy_app/feature/home/home_page.dart';
 import 'package:openimis_claim_policy_app/feature/home/profile_page.dart';
 import 'package:openimis_claim_policy_app/feature/policies/presentation/family_enrolment_page.dart';
 import 'package:openimis_claim_policy_app/feature/shared/widgets/app_bottom_navigation.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/csu_master_data_provider.dart';
 
 @RoutePage()
 class HomeWithTabsPage extends ConsumerStatefulWidget {
@@ -27,6 +28,14 @@ class _HomeWithTabsPageState extends ConsumerState<HomeWithTabsPage> {
     FamilyEnrolmentPage(),
     ProfilePage(title: 'Profile'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(csuMasterDataProvider.notifier).synchronize(),
+    );
+  }
 
   Future<void> _selectNavigationItem(int index) async {
     if (index == 2) {

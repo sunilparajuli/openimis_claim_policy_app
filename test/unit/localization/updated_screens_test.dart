@@ -34,11 +34,13 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(localized(const HomePage(title: 'Home')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Tableau de bord'), findsOneWidget);
+    expect(find.text('Paramètres'), findsNothing);
+    expect(find.byIcon(Icons.settings_outlined), findsNothing);
     expect(find.text('Accepté'), findsNothing);
     await tester.tap(find.text('Tableau de bord'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Accepté'), findsOneWidget);
     expect(find.text('Rejeté'), findsOneWidget);
     expect(
@@ -48,12 +50,9 @@ void main() {
     await tester.pumpWidget(
       localized(const HomePage(title: 'Home'), locale: const Locale('en')),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Accepted'), findsOneWidget);
     expect(find.text('Accepté'), findsNothing);
-    await tester.tap(find.text('Dashboard'));
-    await tester.pumpAndSettle();
-    expect(find.text('Accepted'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

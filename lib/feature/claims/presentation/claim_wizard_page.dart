@@ -3,16 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:openimis_claim_policy_app/core/config/currency_provider.dart';
 import 'package:openimis_claim_policy_app/core/config/claim_form_requirements_provider.dart';
 import 'package:openimis_claim_policy_app/core/localization/app_localizations.dart';
+import 'package:openimis_claim_policy_app/core/utils/insuree_number.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/diagnosis_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_program.dart';
 import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_repository.dart';
+import 'package:openimis_claim_policy_app/feature/claims/repositories/claim_setup_repository.dart';
 import 'package:openimis_claim_policy_app/feature/claims/repositories/offline_claim_repository.dart';
 import 'package:openimis_claim_policy_app/feature/insuree/models/insuree_model.dart';
 import 'package:openimis_claim_policy_app/feature/shared/utils/styles/app_color.dart';
 import 'package:openimis_claim_policy_app/feature/shared/providers/user_session_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/csu_input_limits_provider.dart';
 import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
+import 'package:openimis_claim_policy_app/core/monitoring/error_reporting.dart';
 
 class ClaimWizardPage extends ConsumerStatefulWidget {
   final Insuree? prefilledInsuree;
@@ -35,6 +40,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
   final DateTime _startDate = DateTime.now().subtract(const Duration(days: 1));
   final DateTime _endDate = DateTime.now();
   ClaimVisitType _visitType = ClaimVisitType.emergency;
+  ClaimProgram? _selectedProgram;
 
   // Step 2: Diagnoses
   Diagnosis? _primaryDiagnosis;
@@ -51,6 +57,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
   @override
   void initState() {
     super.initState();
+    ErrorReporting.setWorkflow(AppWorkflow.claims);
     _chfIdController = TextEditingController(
       text: widget.prefilledInsuree?.chfId ?? '',
     );
@@ -84,6 +91,8 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
 
   double get _grandTotal => _servicesTotal + _itemsTotal;
 
+  String get _normalizedChfId => InsureeNumber.normalize(_chfIdController.text);
+
   String _requiredLabel(String label, bool required) =>
       required ? '$label *' : label;
 
@@ -93,9 +102,17 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         ref.read(claimFormRequirementsProvider).value ??
         const ClaimFormRequirements();
     final claimCode = _claimCodeController.text.trim();
+    final inputLimits = ref.read(csuInputLimitsProvider);
+    final claimRepository = ref.read(claimRepositoryProvider);
+    final mpiLengthIssue = inputLimits.validateMpi(_normalizedChfId);
 
-    if (_chfIdController.text.trim().isEmpty) {
+    final insureeNumberIssue = InsureeNumber.validate(_chfIdController.text);
+    if (insureeNumberIssue == InsureeNumberIssue.required) {
       message = 'Please enter Insurance Number';
+    } else if (insureeNumberIssue == InsureeNumberIssue.invisibleCharacter) {
+      message = 'Insurance Number contains invisible characters';
+    } else if (mpiLengthIssue != null) {
+      message = mpiLengthIssue;
     } else if (claimCode.isEmpty) {
       message = 'Please enter Claim Code';
     } else if (claimCode.length > 8) {
@@ -104,13 +121,24 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       message = 'Please enter Health Facility Code';
     } else if (_claimAdminController.text.trim().isEmpty) {
       message = 'Please enter Claim Administrator';
+    } else if (_selectedProgram == null) {
+      message = 'Please select a Program';
     } else if (_primaryDiagnosis == null) {
       message = 'Please select a Primary Diagnosis';
+    } else if (!claimRepository.containsProgram(_selectedProgram!)) {
+      message = 'Invalid program code';
+    } else if (!claimRepository.containsDiagnosis(_primaryDiagnosis!)) {
+      message = 'Invalid diagnosis code';
     } else if (_selectedServices.isEmpty && _selectedItems.isEmpty) {
       message = 'Add at least one Medical Service or Medical Item';
-    } else if (requirements.guaranteeNumber &&
+    } else if ((requirements.guaranteeNumber ||
+            _selectedProgram?.isChequeSante == true) &&
         _guaranteeNoController.text.trim().isEmpty) {
       message = 'Guarantee Number is mandatory';
+    } else if (_selectedProgram?.isChequeSante == true &&
+        inputLimits.validateCheque(_guaranteeNoController.text.trim()) !=
+            null) {
+      message = inputLimits.validateCheque(_guaranteeNoController.text.trim());
     } else if (requirements.secondaryDiagnosis && _secondaryDiagnoses.isEmpty) {
       message = 'Secondary Diagnosis is mandatory';
     } else if (requirements.medicalService && _selectedServices.isEmpty) {
@@ -132,12 +160,18 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
     if (!_validateClaim()) return;
 
     setState(() => _isSubmitting = true);
+    final administrator = ref
+        .read(claimMasterDataStoreProvider)
+        .value
+        ?.administrator;
 
     final submission = ClaimSubmission(
       claimCode: _claimCodeController.text.trim(),
       healthFacility: _healthFacilityController.text.trim(),
+      healthFacilityId: administrator?.healthFacilityId,
       claimAdmin: _claimAdminController.text.trim(),
-      insureeChfId: _chfIdController.text.trim(),
+      claimAdminId: administrator?.id,
+      insureeChfId: _normalizedChfId,
       startDate: _startDate,
       endDate: _endDate,
       claimDate: DateTime.now(),
@@ -145,6 +179,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       guaranteeNo: _guaranteeNoController.text.trim().isEmpty
           ? null
           : _guaranteeNoController.text.trim(),
+      program: _selectedProgram,
       primaryDiagnosis: _primaryDiagnosis!,
       secondaryDiagnoses: _secondaryDiagnoses,
       services: _selectedServices,
@@ -187,7 +222,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
     } catch (error) {
       if (!mounted) return;
       final message = error is ApiError
-          ? error.userMessage
+          ? context.tr(error.userMessage)
           : error.toString().replaceFirst('FormatException: ', '');
       showAppFeedbackDialog(
         context: context,
@@ -205,12 +240,18 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
     if (!_validateClaim()) return;
 
     setState(() => _isSubmitting = true);
+    final administrator = ref
+        .read(claimMasterDataStoreProvider)
+        .value
+        ?.administrator;
 
     final submission = ClaimSubmission(
       claimCode: _claimCodeController.text.trim(),
       healthFacility: _healthFacilityController.text.trim(),
+      healthFacilityId: administrator?.healthFacilityId,
       claimAdmin: _claimAdminController.text.trim(),
-      insureeChfId: _chfIdController.text.trim(),
+      claimAdminId: administrator?.id,
+      insureeChfId: _normalizedChfId,
       startDate: _startDate,
       endDate: _endDate,
       claimDate: DateTime.now(),
@@ -218,6 +259,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
       guaranteeNo: _guaranteeNoController.text.trim().isEmpty
           ? null
           : _guaranteeNoController.text.trim(),
+      program: _selectedProgram,
       primaryDiagnosis: _primaryDiagnosis!,
       secondaryDiagnoses: _secondaryDiagnoses,
       services: _selectedServices,
@@ -446,6 +488,7 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
     final requirements =
         ref.watch(claimFormRequirementsProvider).value ??
         const ClaimFormRequirements();
+    final programs = ref.read(claimRepositoryProvider).getPrograms();
     return Column(
       children: [
         AppTextField(
@@ -499,12 +542,37 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
           },
         ),
         const SizedBox(height: 12),
+        AppDropdownField<ClaimProgram>(
+          value: _selectedProgram,
+          decoration: InputDecoration(
+            labelText: '${context.tr('Program')} *',
+            prefixIcon: const Icon(Icons.account_balance_outlined),
+          ),
+          items: programs
+              .map(
+                (program) => DropdownMenuItem(
+                  value: program,
+                  child: Text('${program.code} — ${program.name}'),
+                ),
+              )
+              .toList(growable: false),
+          onChanged: (program) => setState(() {
+            if (program == _selectedProgram) return;
+            _selectedProgram = program;
+            _selectedServices.clear();
+            _selectedItems.clear();
+          }),
+        ),
+        const SizedBox(height: 12),
         AppTextField(
           controller: _guaranteeNoController,
           decoration: InputDecoration(
             labelText: _requiredLabel(
-              'Guarantee No',
-              requirements.guaranteeNumber,
+              _selectedProgram?.isChequeSante == true
+                  ? context.tr('Cheque number')
+                  : 'Guarantee No',
+              requirements.guaranteeNumber ||
+                  _selectedProgram?.isChequeSante == true,
             ),
             prefixIcon: const Icon(Icons.security),
           ),
@@ -762,6 +830,15 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
         ),
         ListTile(
           dense: true,
+          title: Text(context.tr('Program')),
+          subtitle: Text(
+            _selectedProgram == null
+                ? context.tr('None')
+                : '${_selectedProgram!.code} — ${_selectedProgram!.name}',
+          ),
+        ),
+        ListTile(
+          dense: true,
           title: Text(context.tr('Diagnosis')),
           subtitle: Text(
             _primaryDiagnosis != null
@@ -894,7 +971,17 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
   }
 
   void _showAddServiceDialog() {
-    final services = ref.read(claimRepositoryProvider).getAvailableServices();
+    final programCode = _selectedProgram?.code;
+    final services = ref
+        .read(claimRepositoryProvider)
+        .getAvailableServices()
+        .where(
+          (service) =>
+              programCode != null &&
+              (service.programCode == null ||
+                  service.programCode == programCode),
+        )
+        .toList(growable: false);
     MedicalService? selectedService;
     int quantity = 1;
 
@@ -981,7 +1068,16 @@ class _ClaimWizardPageState extends ConsumerState<ClaimWizardPage> {
   }
 
   void _showAddItemDialog() {
-    final items = ref.read(claimRepositoryProvider).getAvailableItems();
+    final programCode = _selectedProgram?.code;
+    final items = ref
+        .read(claimRepositoryProvider)
+        .getAvailableItems()
+        .where(
+          (item) =>
+              programCode != null &&
+              (item.programCode == null || item.programCode == programCode),
+        )
+        .toList(growable: false);
     MedicationItem? selectedItem;
     int quantity = 1;
 

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_submission_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/diagnosis_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_program.dart';
 
 void main() {
   test('claim payload matches the openIMIS Java FHIR contract', () {
@@ -15,6 +16,7 @@ void main() {
       claimDate: DateTime(2026, 10, 23),
       visitType: ClaimVisitType.other,
       guaranteeNo: 'G1',
+      program: const ClaimProgram(id: '2', code: 'CCS', name: 'Chèque Santé'),
       primaryDiagnosis: const Diagnosis(code: 'A09', name: 'Diagnosis'),
       items: [
         ClaimedItem(
@@ -37,6 +39,11 @@ void main() {
 
     expect(json['status'], 'active');
     expect(json['use'], 'claim');
+    expect(json['extension'][0]['url'], 'claim-program');
+    expect(
+      json['extension'][0]['valueReference']['identifier']['value'],
+      'CCS',
+    );
     expect(json['provider']['identifier']['value'], 'HF1');
     expect(json['enterer']['identifier']['value'], 'CA1');
     expect(json['patient']['identifier']['value'], '070707070');

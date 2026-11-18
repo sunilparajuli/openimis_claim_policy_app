@@ -6,6 +6,9 @@ import 'package:openimis_claim_policy_app/data/remote/graphql/native_graphql_ser
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_master_data.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/claim_service_item_model.dart';
 import 'package:openimis_claim_policy_app/feature/claims/models/diagnosis_model.dart';
+import 'package:openimis_claim_policy_app/feature/claims/models/claim_program.dart';
+import 'package:openimis_claim_policy_app/feature/claims/data/local/claim_master_data_cache.dart';
+import 'package:openimis_claim_policy_app/data/remote/api/error/api_error.dart';
 
 final claimMasterDataStoreProvider = Provider<ClaimMasterDataStore>(
   (ref) => ClaimMasterDataStore(),
@@ -16,15 +19,22 @@ final claimSetupRepositoryProvider = Provider<ClaimSetupRepository>((ref) {
     ref.watch(httpServiceProvider),
     ref.watch(graphQLServiceProvider),
     ref.watch(claimMasterDataStoreProvider),
+    const ClaimMasterDataCache(),
   );
 });
 
 class ClaimSetupRepository {
-  ClaimSetupRepository(this._http, this._graphql, this._store);
+  ClaimSetupRepository(
+    this._http,
+    this._graphql,
+    this._store, [
+    this._cache = const ClaimMasterDataCache(),
+  ]);
 
   final HttpService _http;
   final NativeGraphQLService _graphql;
   final ClaimMasterDataStore _store;
+  final ClaimMasterDataCache _cache;
 
   Future<ClaimMasterData> initialize(
     String claimAdministratorCode, {
@@ -35,17 +45,49 @@ class ClaimSetupRepository {
       throw const FormatException('Please enter Claim Admin Code.');
     }
 
+    try {
+      return await _synchronize(code, onProgress: onProgress);
+    } catch (error) {
+      if (error is FormatException ||
+          error is ApiError &&
+              const {
+                ApiErrorType.client,
+                ApiErrorType.unauthorized,
+                ApiErrorType.forbidden,
+                ApiErrorType.notFound,
+              }.contains(error.type)) {
+        rethrow;
+      }
+      onProgress?.call('Loading offline claim catalogue…');
+      final cached = await _cache.load(code);
+      if (cached == null) rethrow;
+      _store.value = cached;
+      return cached;
+    }
+  }
+
+  Future<ClaimMasterData> _synchronize(
+    String code, {
+    void Function(String message)? onProgress,
+  }) async {
     onProgress?.call('Validating Claim Administrator…');
     final administrator = await _loadAdministrator(code);
 
     onProgress?.call('Checking for updates');
     final diagnoses = await _loadDiagnoses();
 
+    onProgress?.call('Programs…');
+    final programs = await _loadPrograms();
+
     onProgress?.call('Diagnoses, Services, Items…');
     final mapped = await _loadMappedCatalog(code);
+    final eligible = await _loadEligibleCatalog(mapped.$6);
+    final services = _mergeServices(mapped.$1, eligible.$1);
+    final items = _mergeItems(mapped.$2, eligible.$2);
 
     final result = ClaimMasterData(
       administrator: ClaimAdministratorProfile(
+        id: mapped.$5.isNotEmpty ? mapped.$5 : administrator.id,
         code: administrator.code,
         displayName: administrator.displayName,
         healthFacilityCode: mapped.$3.isNotEmpty
@@ -54,12 +96,17 @@ class ClaimSetupRepository {
         healthFacilityName: mapped.$4.isNotEmpty
             ? mapped.$4
             : administrator.healthFacilityName,
+        healthFacilityId: mapped.$6.isNotEmpty
+            ? mapped.$6
+            : administrator.healthFacilityId,
       ),
       diagnoses: diagnoses,
-      services: mapped.$1,
-      items: mapped.$2,
+      services: services,
+      items: items,
+      programs: programs,
     );
     _store.value = result;
+    await _cache.save(result);
     return result;
   }
 
@@ -96,33 +143,49 @@ class ClaimSetupRepository {
     );
     return ClaimAdministratorProfile(
       code: returnedCode,
+      id: practitioner['id']?.toString(),
       displayName: [given, family].where((part) => part.isNotEmpty).join(' '),
       healthFacilityCode: facility['code']?.toString() ?? extensionFacilityCode,
       healthFacilityName: facility['name']?.toString() ?? '',
+      healthFacilityId: facility['id']?.toString(),
     );
   }
 
   Future<List<Diagnosis>> _loadDiagnoses() async {
-    final response = await _http.get<Map<String, dynamic>>(
-      'api/api_fhir_r4/CodeSystem/diagnosis/',
+    final data = await _graphql.query(
+      _diagnosesQuery,
+      variables: {'offset': 0},
     );
-    final concepts = response.data?['concept'];
-    if (concepts is! List || concepts.isEmpty) {
+    final edges = _map(data['diagnoses'])['edges'];
+    if (edges is! List || edges.isEmpty) {
       throw const FormatException('No diagnoses returned by openIMIS.');
     }
-    return concepts
+    return edges
         .map(_map)
-        .map(
-          (item) => Diagnosis(
-            code: item['code']?.toString() ?? '',
-            name: item['display']?.toString() ?? '',
-          ),
-        )
+        .map((edge) => Diagnosis.fromJson(_map(edge['node'])))
         .where((item) => item.code.isNotEmpty)
         .toList(growable: false);
   }
 
-  Future<(List<MedicalService>, List<MedicationItem>, String, String)>
+  Future<List<ClaimProgram>> _loadPrograms() async {
+    final data = await _graphql.query(
+      _programsQuery,
+      variables: {'first': 100},
+    );
+    final edges = _map(data['program'])['edges'];
+    if (edges is! List || edges.isEmpty) {
+      throw const FormatException('No programs returned by openIMIS.');
+    }
+    return edges
+        .map(_map)
+        .map((edge) => ClaimProgram.fromJson(_map(edge['node'])))
+        .where((program) => program.code.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  Future<
+    (List<MedicalService>, List<MedicationItem>, String, String, String, String)
+  >
   _loadMappedCatalog(String code) async {
     final data = await _graphql.query(_catalogQuery, variables: {'code': code});
     final admins = _map(data['claimAdmins']);
@@ -148,7 +211,79 @@ class ClaimSetupRepository {
       items,
       facility['code']?.toString() ?? '',
       facility['name']?.toString() ?? '',
+      node['id']?.toString() ?? '',
+      facility['id']?.toString() ?? '',
     );
+  }
+
+  Future<(List<MedicalService>, List<MedicationItem>)> _loadEligibleCatalog(
+    String healthFacilityId,
+  ) async {
+    if (healthFacilityId.isEmpty) {
+      return (const <MedicalService>[], const <MedicationItem>[]);
+    }
+    final data = await _graphql.query(
+      _eligibleCatalogQuery,
+      variables: {'healthFacilityId': healthFacilityId},
+    );
+    final services = _connectionNodes(data['medicalServices'])
+        .map(MedicalService.fromJson)
+        .where((service) => service.code.isNotEmpty)
+        .toList(growable: false);
+    final items = _connectionNodes(data['medicalItems'])
+        .map(MedicationItem.fromJson)
+        .where((item) => item.code.isNotEmpty)
+        .toList(growable: false);
+    return (services, items);
+  }
+
+  static List<MedicalService> _mergeServices(
+    List<MedicalService> priced,
+    List<MedicalService> eligible,
+  ) {
+    final byCode = {for (final service in eligible) service.code: service};
+    for (final priceListService in priced) {
+      final metadata = byCode[priceListService.code];
+      byCode[priceListService.code] = MedicalService(
+        id: metadata?.id ?? priceListService.id,
+        code: priceListService.code,
+        name: priceListService.name,
+        price: priceListService.price,
+        category: metadata?.category ?? priceListService.category,
+        programCode: metadata?.programCode ?? priceListService.programCode,
+      );
+    }
+    return byCode.values.toList(growable: false);
+  }
+
+  static List<MedicationItem> _mergeItems(
+    List<MedicationItem> priced,
+    List<MedicationItem> eligible,
+  ) {
+    final byCode = {for (final item in eligible) item.code: item};
+    for (final priceListItem in priced) {
+      final metadata = byCode[priceListItem.code];
+      byCode[priceListItem.code] = MedicationItem(
+        id: metadata?.id ?? priceListItem.id,
+        code: priceListItem.code,
+        name: priceListItem.name,
+        price: priceListItem.price,
+        unit: metadata?.unit ?? priceListItem.unit,
+        programCode: metadata?.programCode ?? priceListItem.programCode,
+      );
+    }
+    return byCode.values.toList(growable: false);
+  }
+
+  static Iterable<Map<String, dynamic>> _connectionNodes(
+    dynamic connection,
+  ) sync* {
+    final edges = _map(connection)['edges'];
+    if (edges is! List) return;
+    for (final edge in edges) {
+      final node = _map(_map(edge)['node']);
+      if (node.isNotEmpty) yield node;
+    }
   }
 
   static String _organizationCodeFromExtensions(dynamic value) {
@@ -206,13 +341,51 @@ query ClaimMobileSetup($code: String) {
   claimAdmins(code: $code) {
     edges {
       node {
+        id
         code
         healthFacility {
+          id
           code
           name
-          servicesPricelist { details { edges { node { service { code name price } } } } }
-          itemsPricelist { details { edges { node { item { code name price } } } } }
+          servicesPricelist { details { edges { node { service { code name price program { code nameProgram } } } } } }
+          itemsPricelist { details { edges { node { item { code name price program { code nameProgram } } } } } }
         }
+      }
+    }
+  }
+}''';
+
+  static const _diagnosesQuery = r'''
+query ClaimDiagnoses($offset: Int) {
+  diagnoses(offset: $offset) {
+    edges { node { id code name } }
+  }
+}''';
+
+  static const _programsQuery = r'''
+query ClaimPrograms($first: Int) {
+  program(first: $first) {
+    edges { node { idProgram code nameProgram } }
+  }
+}''';
+
+  static const _eligibleCatalogQuery = r'''
+query ClaimEligibleCatalog($healthFacilityId: ID) {
+  medicalServices(healthFacilityId: $healthFacilityId) {
+    edges {
+      node {
+        id code name price type
+        program { code nameProgram }
+        healthFacility { id code }
+      }
+    }
+  }
+  medicalItems(healthFacilityId: $healthFacilityId) {
+    edges {
+      node {
+        id code name price type
+        program { code nameProgram }
+        healthFacility { id code }
       }
     }
   }

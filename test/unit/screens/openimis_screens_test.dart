@@ -10,6 +10,48 @@ import 'package:openimis_claim_policy_app/feature/policies/presentation/feedback
 import 'package:openimis_claim_policy_app/feature/policies/presentation/indicators_page.dart';
 import 'package:openimis_claim_policy_app/feature/policies/presentation/reports_overview_page.dart';
 import 'package:openimis_claim_policy_app/feature/shared/presentation/about_openimis_page.dart';
+import 'package:openimis_claim_policy_app/feature/shared/models/csu_master_data.dart';
+import 'package:openimis_claim_policy_app/feature/shared/providers/csu_master_data_provider.dart';
+import 'package:openimis_claim_policy_app/feature/shared/repositories/csu_master_data_repository.dart';
+
+class _TestMasterDataController extends CsuMasterDataController {
+  @override
+  Future<CsuMasterDataSnapshot?> build() async => CsuMasterDataSnapshot(
+    data: _policyMasterData(),
+    synchronizedAt: DateTime(2026, 1, 1),
+    isFromCache: true,
+  );
+}
+
+CsuMasterData _policyMasterData() => CsuMasterData.fromJson({
+  for (final key in CsuMasterData.requiredSections) key: <Object>[],
+  'familyTypes': [
+    {'FamilyTypeCode': 'N', 'FamilyType': 'Nuclear'},
+  ],
+  'locations': [
+    {'LocationId': 1, 'LocationCode': 'V1', 'LocationName': 'Village'},
+  ],
+  'officers': [
+    {'OfficerID': 2, 'Code': 'O1', 'LastName': 'Officer'},
+  ],
+  'products': [
+    {
+      'ProdID': 3,
+      'ProductCode': 'CSU',
+      'ProductName': 'CSU Product',
+      'program': 'CSU',
+      'minAge': 0,
+      'maxAge': 0,
+    },
+  ],
+  'genders': [
+    {'Code': 'F', 'Gender': 'Female'},
+  ],
+  'relations': [
+    {'RelationId': 2, 'Relation': 'Child'},
+  ],
+  'ModuleConfiguration': <Object>[],
+});
 
 void main() {
   group('openIMIS Screen Architecture Tests (Java Replication)', () {
@@ -120,23 +162,29 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: FamilyEnrolmentPage())),
+        ProviderScope(
+          overrides: [
+            csuMasterDataProvider.overrideWith(_TestMasterDataController.new),
+          ],
+          child: const MaterialApp(home: FamilyEnrolmentPage()),
+        ),
       );
+      await tester.pumpAndSettle();
 
-      expect(find.text('Family & Insuree Enrolment'), findsOneWidget);
+      expect(find.text('CSU Family Enrolment'), findsOneWidget);
       expect(find.text('Enrol Family'), findsOneWidget);
       expect(find.text('No enrolled families available'), findsOneWidget);
 
-      // Tap to open household enrolment modal
+      // Tap to open the dedicated household enrolment page.
       await tester.tap(find.text('Enrol Family'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
 
-      expect(find.text('New Household Enrolment'), findsOneWidget);
-      expect(find.text('Head of Household Name'), findsOneWidget);
+      expect(find.text('New CSU household'), findsOneWidget);
+      expect(find.text('MPI / CHFID'), findsOneWidget);
     });
 
-    testWidgets('Add family member sheet scrolls above the keyboard', (
+    testWidgets('Policy enrolment page keeps actions above the keyboard', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390, 844);
@@ -146,35 +194,26 @@ void main() {
       addTearDown(tester.view.resetViewInsets);
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: FamilyEnrolmentPage())),
+        ProviderScope(
+          overrides: [
+            csuMasterDataProvider.overrideWith(_TestMasterDataController.new),
+          ],
+          child: const MaterialApp(home: FamilyEnrolmentPage()),
+        ),
       );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Enrol Family'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      await tester.enterText(find.byType(TextField).at(1), 'Test Household');
-      final enrolAction = find.widgetWithText(ElevatedButton, 'Enrol Family');
-      await tester.ensureVisible(enrolAction);
-      await tester.pumpAndSettle();
-      await tester.tap(enrolAction);
-      await tester.pumpAndSettle();
-      // The enrolment success popup is tested independently from this sheet.
-      tester.takeException();
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await tester.tap(find.text('Test Household'));
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await tester.tap(find.text('Add Family Member / Dependent'));
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-
       tester.view.viewInsets = const FakeViewPadding(bottom: 300);
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Add Member'));
+      await tester.ensureVisible(find.text('Save offline'));
       await tester.pumpAndSettle();
 
-      expect(tester.getBottomRight(find.text('Add Member')).dy, lessThan(544));
+      expect(
+        tester.getBottomRight(find.text('Save offline')).dy,
+        lessThan(544),
+      );
       expect(tester.takeException(), isNull);
     });
 

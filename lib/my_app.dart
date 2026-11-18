@@ -38,9 +38,28 @@ class MyApp extends ConsumerStatefulWidget {
   ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends ConsumerState<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   final _appRouter = AppRouter();
   bool _handlingSessionExpiration = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    if (locales?.isNotEmpty == true) {
+      ref.read(appLocaleProvider.notifier).usePhoneLocale(locales!.first);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   Future<void> _handleSessionExpiration() async {
     if (_handlingSessionExpiration) return;

@@ -264,7 +264,10 @@ class ClaimSqliteDatabase {
       SELECT d.*,
         COALESCE((SELECT s.UploadStatus FROM $tblClaimUploadStatus s
           WHERE s.ClaimUUID = d.ClaimUUID ORDER BY s.UploadDate DESC LIMIT 1),
-          '$statusEntered') AS UploadStatus
+          '$statusEntered') AS UploadStatus,
+        (SELECT s.UploadMessage FROM $tblClaimUploadStatus s
+          WHERE s.ClaimUUID = d.ClaimUUID ORDER BY s.UploadDate DESC LIMIT 1)
+          AS UploadMessage
       FROM $tblClaimDetails d
       WHERE NOT EXISTS (
         SELECT 1 FROM $tblClaimUploadStatus s
@@ -293,6 +296,7 @@ class ClaimSqliteDatabase {
       insureeChfId: row['InsureeNumber'] as String? ?? '',
       totalAmount: double.tryParse(row['Total']?.toString() ?? '') ?? 0,
       uploadStatus: row['UploadStatus'] as String? ?? statusEntered,
+      uploadMessage: row['UploadMessage'] as String?,
       date: row['ClaimDate'] as String? ?? '',
       submission: submission,
     );
@@ -306,6 +310,7 @@ class ClaimSqliteDatabase {
       insureeChfId: submission.insureeChfId,
       totalAmount: submission.totalAmount,
       uploadStatus: value['status'] as String,
+      uploadMessage: value['message'] as String?,
       date: value['date'] as String,
       submission: submission,
     );
@@ -319,7 +324,10 @@ class ClaimSqliteDatabase {
     await init();
     if (_useFallback || _db == null) {
       final record = _fallbackStore[claimUuid];
-      if (record != null) record['status'] = status;
+      if (record != null) {
+        record['status'] = status;
+        record['message'] = message;
+      }
       return;
     }
     await _db!.insert(tblClaimUploadStatus, {
@@ -334,6 +342,12 @@ class ClaimSqliteDatabase {
     String claimUuid, {
     String message = 'Synced successfully',
   }) => addUploadStatus(claimUuid, statusAccepted, message: message);
+
+  Future<void> markClaimExported(String claimUuid) => addUploadStatus(
+    claimUuid,
+    statusExported,
+    message: 'Exported in protected XML archive',
+  );
 
   Future<void> markClaimUploadFailed(String claimUuid, Object error) =>
       addUploadStatus(claimUuid, statusError, message: error.toString());
@@ -372,6 +386,7 @@ class OfflineClaimRecord {
     required this.totalAmount,
     required this.uploadStatus,
     required this.date,
+    this.uploadMessage,
     this.submission,
   });
 
@@ -380,6 +395,7 @@ class OfflineClaimRecord {
   final String insureeChfId;
   final double totalAmount;
   final String uploadStatus;
+  final String? uploadMessage;
   final String date;
   final ClaimSubmission? submission;
 }

@@ -5,6 +5,8 @@ import 'package:openimis_claim_policy_app/core/localization/locale_provider.dart
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('AppLocalizations Tests', () {
     test('Default English strings match expectations', () {
       final l10n = AppLocalizations(const Locale('en'));

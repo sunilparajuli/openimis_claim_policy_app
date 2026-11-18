@@ -5,11 +5,21 @@ part 'locale_provider.g.dart';
 
 /// App-wide language/locale state notifier.
 ///
-/// Defaults to English ('en') and supports French ('fr').
+/// Follows the phone language. Unsupported languages fall back to English.
 @Riverpod(keepAlive: true)
 class AppLocaleNotifier extends _$AppLocaleNotifier {
   @override
-  Locale build() => const Locale('en');
+  Locale build() =>
+      supportedPhoneLocale(WidgetsBinding.instance.platformDispatcher.locale);
+
+  static Locale supportedPhoneLocale(Locale locale) =>
+      locale.languageCode.toLowerCase() == 'fr'
+      ? const Locale('fr')
+      : const Locale('en');
+
+  void usePhoneLocale(Locale locale) {
+    setLocale(supportedPhoneLocale(locale));
+  }
 
   /// Sets a specific locale (e.g. 'en' or 'fr').
   void setLocale(Locale newLocale) {
