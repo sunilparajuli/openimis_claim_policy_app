@@ -31,6 +31,9 @@ informational lints are displayed but are temporarily non-fatal. Remove
 `--no-fatal-infos --no-fatal-warnings` when the existing lint backlog is resolved.
 The workflow does not bypass test or build failures.
 
+Tags beginning with `v` or `csu-` publish the built APKs as GitHub Release
+assets after verification succeeds.
+
 The current Gradle configuration signs release APKs with the debug key. They are
 installable test releases, but not Play Store releases. Configure an upload
 keystore through GitHub secrets before store publishing.

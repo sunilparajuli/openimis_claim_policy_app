@@ -415,8 +415,8 @@ flutter build apk --release --split-per-abi --flavor prod -t lib/main/main_prod.
 ```
 
 `.github/workflows/ci.yml` runs generation, analysis, tests, and the production APK
-build on pushes and pull requests. A tag such as `v1.0.0` publishes the three
-architecture-specific APKs to a GitHub Release.
+build on pushes and pull requests. Tags such as `v1.0.0` or `csu-1` publish the
+three architecture-specific APKs to a GitHub Release.
 
 The current Android release build uses debug signing for installable test APKs.
 Configure a protected upload keystore and GitHub secrets before Play Store use.
